@@ -275,27 +275,40 @@ function cfProceed(range) {
 // Named ranges are created here and used via ddNamed() on all other sheets.
 
 function buildLookups(sh, ss) {
-  cw(sh, [[1,220],[2,420],[3,220],[4,180],[5,180]]);
-  baseStyle(sh, 200, 5);
-  sh.setFrozenRows(1);
+  // Layout: PI block cols 1–3 | sep col 4 | each dropdown its own col | sep between each | score key last
+  // Separator columns are 28px wide with BLK background — visually clear boundary.
+  baseStyle(sh, 200, 60);
+  sh.setFrozenRows(2);
+  sh.setFrozenColumns(3);
 
-  h1(sh, 1, 1, 'Lookups — all dropdown lists and reference data (do not edit column A–B values)');
-  for (let c = 2; c <= 5; c++) sh.getRange(1, c).setBackground(PRP);
+  h1(sh, 1, 1, 'Lookups — each list in its own column. Do not edit values in rows 3+.');
+  sh.getRange(1, 2, 1, 59).setBackground(PRP);
 
-  // ── Helper to write a list and create a named range ────────────────────────
-  function list(startRow, col, name, values, heading) {
-    sh.getRange(startRow - 1, col).setValue(heading)
-      .setBackground(SEL).setFontColor(CYN).setFontWeight('bold').setFontSize(9);
-    values.forEach(function(v, i) {
-      sh.getRange(startRow + i, col).setValue(v)
-        .setBackground(BG).setFontColor(FG).setFontSize(10);
-    });
-    nr(ss, name, sh.getRange(startRow, col, values.length, 1));
+  // ── Separator column helper ────────────────────────────────────────────────
+  function sep(col) {
+    sh.setColumnWidth(col, 28);
+    sh.getRange(2, col, 198, 1).setBackground(BLK);
   }
 
-  // ── Column 1: PI Category names + ICO initial scores ──────────────────────
-  // Used by VLOOKUP in Q2 col C (score) and for the PI dropdown in Q2 col B.
-  // Format: col A = name, col B = initial score (1–5)
+  // ── Single-column list helper ──────────────────────────────────────────────
+  // Writes heading in row 2, values from row 3, creates named range, returns next col.
+  function list(col, name, heading, values, width) {
+    sh.setColumnWidth(col, width || 220);
+    sh.getRange(2, col).setValue(heading)
+      .setBackground(SEL).setFontColor(CYN).setFontWeight('bold').setFontSize(9);
+    values.forEach(function(v, i) {
+      sh.getRange(3 + i, col).setValue(v)
+        .setBackground(BG).setFontColor(FG).setFontSize(10);
+    });
+    nr(ss, name, sh.getRange(3, col, values.length, 1));
+    sep(col + 1);
+    return col + 2;
+  }
+
+  // ── PI Category block: cols 1–3 ───────────────────────────────────────────
+  sh.setColumnWidth(1, 300);
+  sh.setColumnWidth(2, 75);
+  sh.setColumnWidth(3, 90);
   sh.getRange(2, 1).setValue('PI Category')
     .setBackground(SEL).setFontColor(CYN).setFontWeight('bold').setFontSize(9);
   sh.getRange(2, 2).setValue('ICO Score')
@@ -371,28 +384,25 @@ function buildLookups(sh, ss) {
       .setFontSize(10).setFontWeight('bold').setHorizontalAlignment('center');
     sh.getRange(r, 3).setValue(row[2] ? 'Yes' : 'No')
       .setBackground(row[2] ? PNK : BG)
-      .setFontColor(row[2] ? BG : CMT)
+      .setFontColor(row[2] ? BG : FG)
       .setFontSize(9).setHorizontalAlignment('center');
   });
 
-  // Named ranges for VLOOKUP source (col A:B and col A for name dropdown)
-  nr(ss, 'PI_SCORES',  sh.getRange(PI_DATA_START, 1, piData.length, 2));
-  nr(ss, 'PI_NAMES',   sh.getRange(PI_DATA_START, 1, piData.length, 1));
+  nr(ss, 'PI_SCORES', sh.getRange(PI_DATA_START, 1, piData.length, 2));
+  nr(ss, 'PI_NAMES',  sh.getRange(PI_DATA_START, 1, piData.length, 1));
 
-  // ── Column 4: all other dropdown lists ────────────────────────────────────
-  var COL = 4;
-  var row = 2;
+  // Separator after PI block before dropdowns
+  sep(4);
 
-  // Each call writes a heading + values, creates named range, returns next row
-  function L(name, heading, values) {
-    list(row + 1, COL, name, values, heading);
-    row += values.length + 2;
-  }
+  // ── Dropdown lists: each in its own column ─────────────────────────────────
+  var col = 5;
 
-  L('DD_SCORES', 'Score (1–5)', ['1','2','3','4','5']);
-  L('DD_IMPORTER_STATUS', 'Importer status',
+  col = list(col, 'DD_SCORES', 'Score (1–5)', ['1','2','3','4','5'], 90);
+
+  col = list(col, 'DD_IMPORTER_STATUS', 'Importer status',
     ['Controller','Processor','Sub-processor','Joint controller']);
-  L('DD_ORG_TYPE', 'Organisation type',
+
+  col = list(col, 'DD_ORG_TYPE', 'Organisation type',
     ['Commercial — standard',
      'Commercial — multinational group',
      'Commercial — large (not multinational)',
@@ -403,71 +413,87 @@ function buildLookups(sh, ss) {
      'Regulated — legal services',
      'Regulated — healthcare',
      'Regulated — other',
-     'Other']);
-  L('DD_VULN', 'Vulnerability',
+     'Other'], 260);
+
+  col = list(col, 'DD_VULN', 'Vulnerability',
     ['Adults only (not vulnerable)',
      'Children or vulnerable adults only',
-     'Both adults and children / vulnerable adults']);
-  L('DD_FREQUENCY', 'Transfer frequency',
+     'Both adults and children / vulnerable adults'], 280);
+
+  col = list(col, 'DD_FREQUENCY', 'Transfer frequency',
     ['Once only',
      'Recurring — specify interval in notes',
      'Continuous — specify period in notes']);
-  L('DD_BIZ_SIZE', 'Organisation size',
+
+  col = list(col, 'DD_BIZ_SIZE', 'Organisation size',
     ['SME (Tier 1 or Tier 2 data protection fee payer)',
-     'Large business']);
-  L('DD_XFER_VOL', 'Transfer volume',
+     'Large business'], 280);
+
+  col = list(col, 'DD_XFER_VOL', 'Transfer volume',
     ['Low volume',
-     'High volume (significant amount, one-off or recurring)']);
-  L('DD_INV_LEVEL', 'Investigation level',
+     'High volume (significant amount, one-off or recurring)'], 280);
+
+  col = list(col, 'DD_INV_LEVEL', 'Investigation level',
     ['Level 1 investigation',
      'Level 2 investigation',
      'Level 3 investigation — Option (i)',
-     'Level 3 investigation — Option (ii) [all high-score PI = significant risk data]']);
-  L('DD_KQ4_1', 'Q4 Key Question 1',
+     'Level 3 investigation — Option (ii) [all high-score PI = significant risk data]'], 420);
+
+  col = list(col, 'DD_KQ4_1', 'Q4 Key Question 1',
     ['No concerns — proceed to Decision Point C → tick C1',
-     'Yes, we have concerns — continue to Key Question 2']);
-  L('DD_KQ4_2', 'Q4 Key Question 2',
+     'Yes, we have concerns — continue to Key Question 2'], 360);
+
+  col = list(col, 'DD_KQ4_2', 'Q4 Key Question 2',
     ['N/A — no concerns raised at Key Question 1',
      'No — transfer does NOT significantly increase the risk → tick C2',
      'Yes — ALL categories of PI increase the risk → tick C3',
-     'Yes — SOME categories of PI increase the risk → tick C4']);
-  L('DD_EQ5_1', 'EQ5 Question 1',
+     'Yes — SOME categories of PI increase the risk → tick C4'], 420);
+
+  col = list(col, 'DD_EQ5_1', 'EQ5 Question 1',
     ['Yes — low / moderate only → tick D1',
-     'No — includes high-score data → continue to EQ2']);
-  L('DD_EQ5_2', 'EQ5 Question 2',
+     'No — includes high-score data → continue to EQ2'], 340);
+
+  col = list(col, 'DD_EQ5_2', 'EQ5 Question 2',
     ['N/A — only low/moderate data (EQ1 = Yes)',
      'No concerns → tick D2',
-     'Yes / not sure → add notes and continue to EQ3']);
-  L('DD_EQ5_3', 'EQ5 Question 3',
+     'Yes / not sure → add notes and continue to EQ3'], 340);
+
+  col = list(col, 'DD_EQ5_3', 'EQ5 Question 3',
     ['N/A — only low/moderate data',
      'N/A — no concerns at EQ2',
      'Yes — high likelihood importer will accept UK Court / arbitration → tick D3',
-     'No — not satisfied → continue to EQ4']);
-  L('DD_EQ5_4', 'EQ5 Question 4',
+     'No — not satisfied → continue to EQ4'], 420);
+
+  col = list(col, 'DD_EQ5_4', 'EQ5 Question 4',
     ['N/A',
      'Yes — other factors apply → note them → tick D4',
-     'No → tick D5']);
-  L('DD_DP_E', 'Decision Point E',
+     'No → tick D5'], 300);
+
+  col = list(col, 'DD_DP_E', 'Decision Point E',
     ['E1 — No significant risk data identified. May proceed.',
      'E2 — All high-score data is both human rights AND enforceability risk data (Level 3 Option ii)',
      'E3 — All categories are human rights risk data (ticked C3)',
      'E4 — Some categories are human rights risk data (ticked C4)',
-     'E5 — All high-score data is enforceability risk data (ticked D5)']);
-  L('DD_EXCEPTION_YN', 'Exception applies?',
-    ['Yes','No','N/A']);
-  L('DD_BENEFIT_YN', 'Benefit outweighs risk?',
+     'E5 — All high-score data is enforceability risk data (ticked D5)'], 460);
+
+  col = list(col, 'DD_EXCEPTION_YN', 'Exception applies?',
+    ['Yes','No','N/A'], 160);
+
+  col = list(col, 'DD_BENEFIT_YN', 'Benefit outweighs risk?',
     ['Yes — benefits outweigh risks',
      'No — risks outweigh benefits',
-     'N/A']);
-  L('DD_DP_F', 'Decision Point F',
-    ['F1 — One or more exceptions apply to ALL significant risk data. May proceed.',
-     'F2 — Exceptions do NOT apply to all significant risk data. May NOT proceed.']);
+     'N/A'], 260);
 
-  // Score key legend in column 5
-  sh.getRange(2, 5).setValue('Score key')
+  col = list(col, 'DD_DP_F', 'Decision Point F',
+    ['F1 — One or more exceptions apply to ALL significant risk data. May proceed.',
+     'F2 — Exceptions do NOT apply to all significant risk data. May NOT proceed.'], 440);
+
+  // ── Score key ──────────────────────────────────────────────────────────────
+  sh.setColumnWidth(col, 160);
+  sh.getRange(2, col).setValue('Score key')
     .setBackground(SEL).setFontColor(CYN).setFontWeight('bold').setFontSize(9);
   for (let s = 1; s <= 5; s++) {
-    sh.getRange(2 + s, 5).setValue(SLB[s])
+    sh.getRange(2 + s, col).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s])
       .setFontSize(9).setFontWeight('bold');
   }
@@ -594,14 +620,11 @@ function buildQ1(sh) {
     lbl(sh, r, 1, labelTxt);
     sh.getRange(r, 3).setValue(guidanceTxt)
       .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
-    r++;
     if (ddName) {
       ddNamed(sh, r, 2, ddName);
     } else {
       inp(sh, r, 2);
     }
-    sh.getRange(r, 1).setBackground(BG);
-    sh.getRange(r, 3).setBackground(BG);
     sh.setRowHeight(r++, 30);
     spacer(sh, r++);
   }
@@ -614,22 +637,15 @@ function buildQ1(sh) {
   lbl(sh, r, 1, '(4) Organisation type — notes');
   sh.getRange(r, 3).setValue('e.g. name of group, size, regulator')
     .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic');
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 40);
   spacer(sh, r++);
 
   lbl(sh, r, 1, '(5) Importer\'s relevant activities');
   sh.getRange(r, 3).setValue('What will the importer do with the PI? Describe their activities / services.')
     .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.setRowHeight(r, 60);
-  r++;
+  sh.setRowHeight(r++, 60);
   spacer(sh, r++);
 
   // ── People ────────────────────────────────────────────────────────────────
@@ -641,10 +657,7 @@ function buildQ1(sh) {
   lbl(sh, r, 1, '(6a) Vulnerability status');
   sh.getRange(r, 3).setValue('Select all that apply')
     .setBackground(BG).setFontColor(FG).setFontSize(8);
-  r++;
   ddNamed(sh, r, 2, 'DD_VULN');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 28);
   spacer(sh, r++);
 
@@ -677,12 +690,7 @@ function buildQ1(sh) {
   });
 
   lbl(sh, r, 1, '(6c) Other categories (describe):');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 36);
   spacer(sh, r++);
 
@@ -700,10 +708,7 @@ function buildQ1(sh) {
   volFields.forEach(function(vf) {
     lbl(sh, r, 1, vf[0]);
     sh.getRange(r, 3).setValue(vf[1]).setBackground(BG).setFontColor(FG).setFontSize(8);
-    r++;
     inp(sh, r, 2);
-    sh.getRange(r, 1).setBackground(BG);
-    sh.getRange(r, 3).setBackground(BG);
     sh.setRowHeight(r++, 26);
   });
   spacer(sh, r++);
@@ -717,29 +722,18 @@ function buildQ1(sh) {
   lbl(sh, r, 1, '(8) Frequency of transfers');
   sh.getRange(r, 3).setValue('How often will transfers occur?')
     .setBackground(BG).setFontColor(FG).setFontSize(8);
-  r++;
   ddNamed(sh, r, 2, 'DD_FREQUENCY');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 26);
 
   lbl(sh, r, 1, '(8) Interval / period details');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 30);
   spacer(sh, r++);
 
   lbl(sh, r, 1, '(9) Duration of arrangement with importer');
   sh.getRange(r, 3).setValue('How long can the importer receive / access the PI?')
     .setBackground(BG).setFontColor(FG).setFontSize(8);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 30);
   spacer(sh, r++);
 
@@ -758,12 +752,8 @@ function buildQ1(sh) {
   protFields.forEach(function(pf) {
     lbl(sh, r, 1, pf[0]);
     sh.getRange(r, 3).setValue(pf[1]).setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
-    r++;
     inp(sh, r, 2);
-    sh.getRange(r, 1).setBackground(BG);
-    sh.getRange(r, 3).setBackground(BG);
-    sh.setRowHeight(r, 52);
-    r++;
+    sh.setRowHeight(r++, 52);
     spacer(sh, r++);
   });
 
@@ -955,38 +945,20 @@ function buildQ3(sh, ss) {
   r++;
 
   lbl(sh, r, 1, 'Max score from Q2 (auto):');
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
-  r++;
   auto(sh, r, 2, '=IFERROR(MAX_SCORE,"⏳ Complete Q2 first")');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
   cfScore(sh.getRange(r, 2));
   sh.setRowHeight(r++, 26);
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Organisation size:');
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
-  r++;
   ddNamed(sh, r, 2, 'DD_BIZ_SIZE');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
   sh.setRowHeight(r, 26);
   nr(ss, 'BIZ_SIZE', sh.getRange(r, 2));
   r++;
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Transfer volume:');
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
-  r++;
   ddNamed(sh, r, 2, 'DD_XFER_VOL');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
   sh.setRowHeight(r, 26);
   nr(ss, 'XFER_VOL', sh.getRange(r, 2));
   r++;
@@ -1079,39 +1051,19 @@ function buildQ3(sh, ss) {
   r++;
 
   lbl(sh, r, 1, 'Select the investigation level you will carry out:');
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
-  r++;
   ddNamed(sh, r, 2, 'DD_INV_LEVEL');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
   sh.setRowHeight(r, 30);
   nr(ss, 'DP_B', sh.getRange(r, 2));
   r++;
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Reasons this level is reasonable and proportionate:');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
   sh.setRowHeight(r++, 52);
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Resources used in investigation:');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  sh.getRange(r, 4).setBackground(BG);
   sh.setRowHeight(r, 65);
 }
 
@@ -1174,11 +1126,7 @@ function buildQ4(sh, ss) {
 
   // Investigation level reference
   lbl(sh, r, 1, 'Investigation level used (from Q3, auto):');
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   auto(sh, r, 2, '=IFERROR(DP_B,"⏳ Complete Q3 first")');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 26);
   spacer(sh, r++);
 
@@ -1189,58 +1137,35 @@ function buildQ4(sh, ss) {
   r++;
 
   lbl(sh, r, 1, 'Resources used:');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 65);
   spacer(sh, r++);
 
   // Key Question 1
   h3(sh, r, 1, 'Key Question 1: Any concerns about human rights in the destination country?');
-  sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setValue('From your investigation — see Table 5 above')
     .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic');
-  r++;
   ddNamed(sh, r, 2, 'DD_KQ4_1');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r, 26);
   nr(ss, 'KQ4_1', sh.getRange(r, 2));
   r++;
 
   lbl(sh, r, 1, '  Which Articles are relevant? (list and describe concerns)');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 52);
   spacer(sh, r++);
 
   // Key Question 2
   h3(sh, r, 1, 'Key Question 2: By making this transfer, are you making the risk SIGNIFICANTLY WORSE for the people?');
-  sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setValue('Consider: more likely a breach will happen, OR more severe if it did. Risk must be clear, meaningful and linked to this transfer.')
     .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
-  r++;
   ddNamed(sh, r, 2, 'DD_KQ4_2');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r, 26);
   nr(ss, 'KQ4_2', sh.getRange(r, 2));
   r++;
 
   lbl(sh, r, 1, '  Which PI categories cause the increase in risk (if applicable):');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 40);
   spacer(sh, r++);
 
@@ -1265,12 +1190,7 @@ function buildQ4(sh, ss) {
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'List of human rights risk data (if C3 or C4 — required):');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r, 40);
 }
 
@@ -1308,11 +1228,8 @@ function buildQ5(sh, ss) {
 
   function eq(labelTxt, guidanceTxt, ddName, namedRange) {
     lbl(sh, r, 1, labelTxt);
-    sh.getRange(r, 2).setBackground(BG);
     sh.getRange(r, 3).setValue(guidanceTxt).setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
-    r++;
     ddNamed(sh, r, 2, ddName);
-    sh.getRange(r, 1).setBackground(BG);
     inp(sh, r, 3);
     sh.setRowHeight(r, 28);
     if (namedRange) nr(ss, namedRange, sh.getRange(r, 2));
@@ -1330,7 +1247,6 @@ function buildQ5(sh, ss) {
 
   // EQ3 with factor checkboxes
   h3(sh, r, 1, 'EQ3: Is there a HIGH likelihood the importer will accept a UK Court decision or UK arbitration award?');
-  sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setValue('Consider factors (a)–(d) below — tick those that are satisfied.')
     .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
   r++;
@@ -1348,10 +1264,7 @@ function buildQ5(sh, ss) {
     sh.setRowHeight(r++, 26);
   });
   lbl(sh, r, 1, '  Overall answer to EQ3:');
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   ddNamed(sh, r, 2, 'DD_EQ5_3');
-  sh.getRange(r, 1).setBackground(BG);
   inp(sh, r, 3);
   sh.setRowHeight(r, 28);
   nr(ss, 'EQ5_3', sh.getRange(r, 2));
@@ -1396,12 +1309,7 @@ function buildQ5(sh, ss) {
   sh.setRowHeight(r++, 30);
 
   lbl(sh, r, 1, 'Select Decision Point E:');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   ddNamed(sh, r, 2, 'DD_DP_E');
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r, 28);
   nr(ss, 'DP_E', sh.getRange(r, 2));
   r++;
@@ -1419,12 +1327,7 @@ function buildQ5(sh, ss) {
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'List all significant risk data categories (recommended):');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r, 40);
 }
 
@@ -1454,10 +1357,7 @@ function buildQ6(sh, ss) {
   // Significant risk data reference
   lbl(sh, r, 1, 'Significant risk data (from Q5, Decision Point E, auto):');
   for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
-  r++;
   auto(sh, r, 2, '=IFERROR(DP_E,"⏳ Complete Q5 first")');
-  for (let c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
-  sh.getRange(r, 1).setBackground(BG);
   sh.setRowHeight(r++, 26);
   spacer(sh, r++);
 
@@ -1513,15 +1413,11 @@ function buildQ6(sh, ss) {
 
   lbl(sh, r, 1, 'Select your Decision Point F conclusion:');
   for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
-  r++;
   ddNamed(sh, r, 2, 'DD_DP_F');
-  sh.getRange(r, 1).setBackground(BG);
-  for (let c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   sh.setRowHeight(r, 28);
+  nr(ss, 'DP_F_VAL', sh.getRange(r, 2));
   r++;
   spacer(sh, r++);
-
-  nr(ss, 'DP_F_VAL', sh.getRange(r - 2, 2));
 
   var dpFf =
     '=IF(DP_F_VAL="","⏳ Select Decision Point F above",' +
@@ -1536,9 +1432,7 @@ function buildQ6(sh, ss) {
 
   lbl(sh, r, 1, 'Additional notes:');
   for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  for (let c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   sh.setRowHeight(r, 52);
 }
 
@@ -1573,15 +1467,11 @@ function buildSummary(sh) {
   ];
   idFields.forEach(function(f) {
     lbl(sh, r, 1, f[0]);
-    sh.getRange(r, 3).setBackground(BG);
-    r++;
     if (f[1].charAt(0) === '=') {
       auto(sh, r, 2, f[1]);
     } else {
       inp(sh, r, 2);
     }
-    sh.getRange(r, 1).setBackground(BG);
-    sh.getRange(r, 3).setBackground(BG);
     sh.setRowHeight(r++, 24);
   });
   spacer(sh, r++);
@@ -1643,12 +1533,7 @@ function buildSummary(sh) {
 
   // Notes
   lbl(sh, r, 1, 'General notes and caveats:');
-  sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
-  r++;
   inp(sh, r, 2);
-  sh.getRange(r, 1).setBackground(BG);
-  sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 65);
   spacer(sh, r++);
 
