@@ -355,7 +355,7 @@ function buildLookups(sh, ss) {
   }
 
   // ── PI Category block: cols 1–3 ───────────────────────────────────────────
-  sh.setColumnWidth(1, 300);
+  sh.setColumnWidth(1, 456);
   sh.setColumnWidth(2, 75);
   sh.setColumnWidth(3, 90);
   sh.getRange(2, 1).setValue('PI Category')
@@ -494,7 +494,7 @@ function buildLookups(sh, ss) {
     ['Level 1 investigation',
      'Level 2 investigation',
      'Level 3 investigation — Option (i)',
-     'Level 3 investigation — Option (ii) [all high-score PI = significant risk data]'], 420);
+     'Level 3 investigation — Option (ii) [all high-score PI = significant risk data]'], 308);
 
   col = list(col, 'DD_KQ4_1', 'Q4 Key Question 1',
     ['No concerns — proceed to Decision Point C → tick C1',
@@ -748,7 +748,7 @@ function buildLookups(sh, ss) {
      'Western Sahara',
      'Yemen',
      'Zambia',
-     'Zimbabwe'], 200);
+     'Zimbabwe'], 206);
 
 
   // ── Score key ──────────────────────────────────────────────────────────────
