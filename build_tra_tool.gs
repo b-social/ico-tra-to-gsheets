@@ -37,6 +37,7 @@ var SLB = ['', '1 – Very Low', '2 – Low', '3 – Moderate', '4 – High', '5
 //   KQ4_1, KQ4_2, EQ5_1, EQ5_2, EQ5_3, EQ5_4, DP_E
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
 function buildTRATool() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -80,14 +81,8 @@ function buildTRATool() {
   // Remove sheets not in our list
   ss.getSheets().forEach(function(sh) {
     if (TABS.map(function(t) { return t[0]; }).indexOf(sh.getName()) === -1) {
-      try { ss.deleteSheet(sh); } catch(e) {}
+      try { ss.deleteSheet(sh); } catch(_e) {} // eslint-disable-line no-unused-vars
     }
-  });
-
-  // Clear stale named ranges
-  ['MAX_SCORE','BIZ_SIZE','XFER_VOL','DP_B','KQ4_1','KQ4_2',
-   'EQ5_1','EQ5_2','EQ5_3','EQ5_4','DP_E','DP_F_VAL'].forEach(function(n) {
-    try { ss.removeNamedRange(n); } catch(e) {}
   });
 
   // Lookups tab first — all other sheets reference it
@@ -102,7 +97,7 @@ function buildTRATool() {
   buildQ4(sheets['Q4 · Human Rights Risk'], ss);
   buildQ5(sheets['Q5 · Enforcement'], ss);
   buildQ6(sheets['Q6 · Exceptions'], ss);
-  buildSummary(sheets['✅ Summary'], ss);
+  buildSummary(sheets['✅ Summary']);
   buildKrooPICategories(sheets['🏦 Kroo PI Categories']);
 
   ss.setActiveSheet(sheets['📋 Instructions']);
@@ -203,9 +198,15 @@ function ck(sh, r, c) {
     .setBackground(SEL);
 }
 
-// Set / overwrite named range
+// Set / overwrite named range — find-and-update to avoid removeNamedRange exceptions
 function nr(ss, name, range) {
-  try { ss.removeNamedRange(name); } catch(e) {}
+  var existing = ss.getNamedRanges();
+  for (var i = 0; i < existing.length; i++) {
+    if (existing[i].getName() === name) {
+      existing[i].setRange(range);
+      return;
+    }
+  }
   ss.setNamedRange(name, range);
 }
 
@@ -215,21 +216,13 @@ function spacer(sh, r) {
   sh.setRowHeight(r, 6);
 }
 
-// Shade a full row across N cols in a given bg/fg
-function rowStyle(sh, r, cols, bg, fg) {
-  for (var c = 1; c <= cols; c++) {
-    sh.getRange(r, c).setBackground(bg);
-    if (fg) sh.getRange(r, c).setFontColor(fg);
-  }
-}
-
 // ─── Conditional formatting ───────────────────────────────────────────────────
 
 // Score 1–5 conditional format (works on text "1"-"5" or numbers)
 function cfScore(range) {
   var sh    = range.getSheet();
   var rules = sh.getConditionalFormatRules();
-  for (var s = 1; s <= 5; s++) {
+  for (let s = 1; s <= 5; s++) {
     rules.push(
       SpreadsheetApp.newConditionalFormatRule()
         .whenTextEqualTo(String(s))
@@ -268,7 +261,7 @@ function buildLookups(sh, ss) {
   sh.setFrozenRows(1);
 
   h1(sh, 1, 1, 'Lookups — all dropdown lists and reference data (do not edit column A–B values)');
-  for (var c = 2; c <= 5; c++) sh.getRange(1, c).setBackground(PRP);
+  for (let c = 2; c <= 5; c++) sh.getRange(1, c).setBackground(PRP);
 
   // ── Helper to write a list and create a named range ────────────────────────
   function list(startRow, col, name, values, heading) {
@@ -454,7 +447,7 @@ function buildLookups(sh, ss) {
   // Score key legend in column 5
   sh.getRange(2, 5).setValue('Score key')
     .setBackground(SEL).setFontColor(CYN).setFontWeight('bold').setFontSize(9);
-  for (var s = 1; s <= 5; s++) {
+  for (let s = 1; s <= 5; s++) {
     sh.getRange(2 + s, 5).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s])
       .setFontSize(9).setFontWeight('bold');
@@ -469,11 +462,11 @@ function buildInstructions(sh) {
   sh.setFrozenRows(2);
 
   h1(sh, 1, 1, '🔒  ICO Transfer Risk Assessment (TRA) Tool');
-  for (var c = 2; c <= 4; c++) sh.getRange(1, c).setBackground(PRP);
+  for (let c = 2; c <= 4; c++) sh.getRange(1, c).setBackground(PRP);
 
   sh.getRange(2, 1).setValue('UK GDPR Article 46 · Based on ICO TRA Tool (November 2022)')
     .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
-  for (var c = 2; c <= 4; c++) sh.getRange(2, c).setBackground(SEL);
+  for (let c = 2; c <= 4; c++) sh.getRange(2, c).setBackground(SEL);
 
   var r = 3;
 
@@ -485,7 +478,7 @@ function buildInstructions(sh) {
     'Seek professional data protection advice if needed.',
   ].forEach(function(t) {
     sh.getRange(r, 1).setValue(t).setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
-    for (var c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(BG);
+    for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(BG);
     sh.setRowHeight(r++, 30);
   });
 
@@ -516,10 +509,10 @@ function buildInstructions(sh) {
 
   spacer(sh, r++);
   h2(sh, r++, 1, 'Score key (1–5)');
-  for (var s = 1; s <= 5; s++) {
+  for (let s = 1; s <= 5; s++) {
     sh.getRange(r, 1).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(10).setFontWeight('bold');
-    for (var c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(SBG[s]);
+    for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(SBG[s]);
     r++;
   }
 
@@ -533,7 +526,7 @@ function buildInstructions(sh) {
   ];
   guide.forEach(function(g) {
     sh.getRange(r, 1).setValue('  ' + g[2]).setBackground(g[0]).setFontColor(g[1]).setFontSize(10);
-    for (var c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(g[0]);
+    for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(g[0]);
     r++;
   });
 
@@ -769,13 +762,13 @@ function buildQ2(sh, ss) {
   sh.setFrozenRows(3);
 
   h1(sh, 1, 1, 'Q2 · What is the risk level in the personal information you are transferring?');
-  for (var c = 2; c <= 9; c++) sh.getRange(1, c).setBackground(PRP);
+  for (let c = 2; c <= 9; c++) sh.getRange(1, c).setBackground(PRP);
   sh.getRange(1, 9).setValue('← Q1  → Q3').setBackground(PRP).setFontColor(YLW)
     .setFontWeight('bold').setHorizontalAlignment('right');
 
   // Score key row
   sh.getRange(2, 1).setValue('Score key:').setBackground(SEL).setFontColor(CMT).setFontSize(9);
-  for (var s = 1; s <= 5; s++) {
+  for (let s = 1; s <= 5; s++) {
     sh.getRange(2, 1 + s).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(8).setFontWeight('bold').setHorizontalAlignment('center');
   }
@@ -859,9 +852,9 @@ function buildQ2(sh, ss) {
 
   // Additional notes
   h3(sh, AFTER + 1, 1, 'Additional notes:');
-  for (var c = 2; c <= 9; c++) sh.getRange(AFTER + 1, c).setBackground(BG);
+  for (let c = 2; c <= 9; c++) sh.getRange(AFTER + 1, c).setBackground(BG);
   inp(sh, AFTER + 2, 2);
-  for (var c = 3; c <= 9; c++) sh.getRange(AFTER + 2, c).setBackground(BG);
+  for (let c = 3; c <= 9; c++) sh.getRange(AFTER + 2, c).setBackground(BG);
   sh.setRowHeight(AFTER + 2, 50);
 
   spacer(sh, AFTER + 3);
@@ -869,7 +862,7 @@ function buildQ2(sh, ss) {
   // Max score calculation
   var MS_ROW = AFTER + 4;
   h3(sh, MS_ROW, 1, 'Max score across all categories:');
-  for (var c = 2; c <= 9; c++) sh.getRange(MS_ROW, c).setBackground(BG);
+  for (let c = 2; c <= 9; c++) sh.getRange(MS_ROW, c).setBackground(BG);
   sh.getRange(MS_ROW, 2)
     .setFormula('=IFERROR(MAX(IFERROR(VALUE(H' + DATA_START + ':H' + (DATA_START + NUM_ROWS - 1) + '),0)),"")')
     .setBackground(BLK).setFontColor(CYN).setFontSize(12).setFontWeight('bold').setHorizontalAlignment('center');
@@ -879,7 +872,7 @@ function buildQ2(sh, ss) {
   // Decision Point A
   var DPA_ROW = MS_ROW + 2;
   h2(sh, DPA_ROW, 1, '⬛  DECISION POINT A');
-  for (var c = 2; c <= 9; c++) sh.getRange(DPA_ROW, c).setBackground(SEL);
+  for (let c = 2; c <= 9; c++) sh.getRange(DPA_ROW, c).setBackground(SEL);
 
   var dpAf =
     '=IF(MAX_SCORE="","⏳ Complete Table 2 above — enter PI categories (col B) and final scores (col H)",' +
@@ -888,7 +881,7 @@ function buildQ2(sh, ss) {
     '"🔴 A3 — Data includes high harm risk (max score: "&MAX_SCORE&"). → Go to Q3 · Investigation Level.")))';
 
   dpCell(sh, DPA_ROW + 1, 1, dpAf);
-  for (var c = 2; c <= 9; c++) {
+  for (let c = 2; c <= 9; c++) {
     sh.getRange(DPA_ROW + 1, c).setBackground(BG);
     sh.setRowHeight(DPA_ROW + 1, 65);
   }
@@ -1425,26 +1418,26 @@ function buildQ6(sh, ss) {
   sh.setFrozenRows(3);
 
   h1(sh, 1, 1, 'Q6 · Do any of the exceptions apply to the significant risk data?');
-  for (var c = 2; c <= 6; c++) sh.getRange(1, c).setBackground(PRP);
+  for (let c = 2; c <= 6; c++) sh.getRange(1, c).setBackground(PRP);
   sh.getRange(1, 6).setValue('← Q5').setBackground(PRP).setFontColor(YLW).setFontWeight('bold').setHorizontalAlignment('right');
 
   sh.getRange(2, 1).setValue('Table 8: Exceptions checklist.')
     .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
-  for (var c = 2; c <= 6; c++) sh.getRange(2, c).setBackground(SEL);
+  for (let c = 2; c <= 6; c++) sh.getRange(2, c).setBackground(SEL);
 
   sh.getRange(3, 1).setValue('⚠️ Only complete if significant risk data identified at Decision Point E. Article 46 mechanism provides SOME (not all) appropriate safeguards.')
     .setBackground(SEL).setFontColor(YLW).setFontSize(9).setWrap(true);
-  for (var c = 2; c <= 6; c++) sh.getRange(3, c).setBackground(SEL);
+  for (let c = 2; c <= 6; c++) sh.getRange(3, c).setBackground(SEL);
   sh.setRowHeight(3, 30);
 
   var r = 4;
 
   // Significant risk data reference
   lbl(sh, r, 1, 'Significant risk data (from Q5, Decision Point E, auto):');
-  for (var c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   r++;
   auto(sh, r, 2, '=IFERROR(DP_E,"⏳ Complete Q5 first")');
-  for (var c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   sh.getRange(r, 1).setBackground(BG);
   sh.setRowHeight(r++, 26);
   spacer(sh, r++);
@@ -1496,29 +1489,20 @@ function buildQ6(sh, ss) {
 
   // Decision Point F — user selects
   h2(sh, r, 1, '⬛  DECISION POINT F');
-  for (var c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(SEL);
+  for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(SEL);
   r++;
 
   lbl(sh, r, 1, 'Select your Decision Point F conclusion:');
-  for (var c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   r++;
   ddNamed(sh, r, 2, 'DD_DP_F');
   sh.getRange(r, 1).setBackground(BG);
-  for (var c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   sh.setRowHeight(r, 28);
   r++;
   spacer(sh, r++);
 
-  var dpFresultF =
-    '=IF(IFERROR(INDIRECT("\'Q6 · Exceptions\'!B' + (r - 3) + '"),"")="","⏳ Select Decision Point F above",' +
-    'IF(ISNUMBER(SEARCH("F1",IFERROR(INDIRECT("\'Q6 · Exceptions\'!B' + (r - 3) + '"),""))),'+
-    '"✅ MAY PROCEED — One or more exceptions apply to all significant risk data.",' +
-    '"❌ CANNOT PROCEED — Exceptions do not apply to all significant risk data. May NOT proceed. Consider removing significant risk data from scope and repeating the TRA."))';
-
-  // Use DP_F named range cell directly
-  var dpFrow = r - 3; // the row of the dropdown
-  // Re-set with simpler formula reading the DP_F cell value
-  nr(ss, 'DP_F_VAL', sh.getRange(dpFrow, 2));
+  nr(ss, 'DP_F_VAL', sh.getRange(r - 2, 2));
 
   var dpFf =
     '=IF(DP_F_VAL="","⏳ Select Decision Point F above",' +
@@ -1527,21 +1511,21 @@ function buildQ6(sh, ss) {
     '"❌ CANNOT PROCEED — Exceptions do not apply to all significant risk data. May NOT proceed. Consider removing significant risk data from scope and repeating the TRA."))';
 
   dpCell(sh, r, 1, dpFf);
-  for (var c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   r++;
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Additional notes:');
-  for (var c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   r++;
   inp(sh, r, 2);
-  for (var c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  for (let c = 3; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   sh.setRowHeight(r, 52);
 }
 
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 
-function buildSummary(sh, ss) {
+function buildSummary(sh) {
   cw(sh, [[1,160],[2,200],[3,160]]);
   baseStyle(sh, 80, 3);
   sh.setFrozenRows(2);
@@ -1850,7 +1834,7 @@ function buildKrooPICategories(sh) {
   sh.setFrozenRows(3);
 
   h1(sh, 1, 1, '🏦 Kroo — PI Data Categories, Risk Scores & Regulatory Context');
-  for (var c = 2; c <= 7; c++) sh.getRange(1, c).setBackground(PRP);
+  for (let c = 2; c <= 7; c++) sh.getRange(1, c).setBackground(PRP);
 
   sh.getRange(2, 1).setValue(
     '⚠️ INFERENCE RISK: Transaction and location data may reveal GDPR Art 9 special category data by inference. ' +
@@ -1858,7 +1842,7 @@ function buildKrooPICategories(sh) {
     'HIV organisation, political party, or LGBTQ+ venue can reveal trade union membership, religion, ' +
     'health, or political opinions. ICO guidance: special category data includes information from which Art 9 data CAN BE INFERRED.'
   ).setBackground(SEL).setFontColor(YLW).setFontSize(9).setWrap(true);
-  for (var c = 2; c <= 7; c++) sh.getRange(2, c).setBackground(SEL);
+  for (let c = 2; c <= 7; c++) sh.getRange(2, c).setBackground(SEL);
   sh.setRowHeight(2, 52);
 
   // Column headers
@@ -1886,7 +1870,7 @@ function buildKrooPICategories(sh) {
     // Category section divider
     if (category !== lastCat) {
       h2(sh, r, 1, category);
-      for (var c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
+      for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
       r++;
       lastCat = category;
     }
@@ -1934,12 +1918,12 @@ function buildKrooPICategories(sh) {
 
   // Score key
   h2(sh, r, 1, 'Score key');
-  for (var c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
+  for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
   r++;
-  for (var s = 1; s <= 5; s++) {
+  for (let s = 1; s <= 5; s++) {
     sh.getRange(r, 1).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(9).setFontWeight('bold');
-    for (var c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SBG[s]);
+    for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SBG[s]);
     r++;
   }
 
@@ -1947,7 +1931,7 @@ function buildKrooPICategories(sh) {
 
   // Legend
   h2(sh, r, 1, 'Column legend');
-  for (var c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
+  for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
   r++;
   var legend = [
     [PNK,  BG,  'Special Cat? = ⚠️ Yes', 'GDPR Art 9 special category data — requires explicit legal basis and extra protections.'],
@@ -1957,7 +1941,7 @@ function buildKrooPICategories(sh) {
   legend.forEach(function(lg) {
     sh.getRange(r, 1).setValue(lg[2]).setBackground(lg[0]).setFontColor(lg[1]).setFontSize(9).setFontWeight('bold').setWrap(true);
     sh.getRange(r, 2).setValue(lg[3]).setBackground(BG).setFontColor(CMT).setFontSize(8).setWrap(true);
-    for (var c = 3; c <= 7; c++) sh.getRange(r, c).setBackground(BG);
+    for (let c = 3; c <= 7; c++) sh.getRange(r, c).setBackground(BG);
     sh.setRowHeight(r++, 40);
   });
 }
