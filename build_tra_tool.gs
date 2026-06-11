@@ -111,7 +111,8 @@ function cw(sh, arr) {
 
 function baseStyle(sh, rows, cols) {
   sh.getRange(1, 1, rows, cols)
-    .setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
+    .setBackground(BG).setFontColor(FG).setFontSize(10)
+    .setWrap(true).setVerticalAlignment('top');
 }
 
 // H1 – title bar
@@ -133,14 +134,14 @@ function h2(sh, r, c, txt) {
 // H3 – sub-heading
 function h3(sh, r, c, txt) {
   sh.getRange(r, c).setValue(txt)
-    .setBackground(BG).setFontColor(CMT)
+    .setBackground(BG).setFontColor(FG)
     .setFontSize(9).setFontWeight('bold').setWrap(true);
 }
 
 // Label (italic, muted)
 function lbl(sh, r, c, txt) {
   sh.getRange(r, c).setValue(txt)
-    .setBackground(BG).setFontColor(CMT)
+    .setBackground(BG).setFontColor(FG)
     .setFontSize(9).setFontStyle('italic').setWrap(true);
 }
 
@@ -205,8 +206,33 @@ function nr(ss, name, range) {
 
 // Tiny spacer row
 function spacer(sh, r) {
-  sh.getRange(r, 1).setBackground(BG);
-  sh.setRowHeight(r, 6);
+  sh.setRowHeight(r, 2);
+}
+
+// Navigation hyperlink cell — links is [[label, tabName], ...]
+// Renders as "← Q3 | → Q5" with each label hyperlinked to its tab.
+function navLink(sh, r, c, links) {
+  var ss = sh.getParent();
+  var parts = [];
+  links.forEach(function(pair, i) {
+    if (i > 0) parts.push([' | ', null]);
+    parts.push([pair[0], pair[1]]);
+  });
+  var fullText = parts.map(function(p) { return p[0]; }).join('');
+  var builder  = SpreadsheetApp.newRichTextValue().setText(fullText);
+  var pos = 0;
+  parts.forEach(function(p) {
+    var end = pos + p[0].length;
+    if (p[1]) {
+      var target = ss.getSheetByName(p[1]);
+      if (target) builder.setLinkUrl(pos, end, '#gid=' + target.getSheetId());
+    }
+    pos = end;
+  });
+  sh.getRange(r, c)
+    .setRichTextValue(builder.build())
+    .setBackground(PRP).setFontColor(YLW).setFontWeight('bold')
+    .setHorizontalAlignment('right');
 }
 
 // ─── Conditional formatting ───────────────────────────────────────────────────
@@ -249,7 +275,7 @@ function cfProceed(range) {
 // Named ranges are created here and used via ddNamed() on all other sheets.
 
 function buildLookups(sh, ss) {
-  cw(sh, [[1,220],[2,80],[3,180],[4,160],[5,160]]);
+  cw(sh, [[1,220],[2,420],[3,220],[4,180],[5,180]]);
   baseStyle(sh, 200, 5);
   sh.setFrozenRows(1);
 
@@ -450,7 +476,7 @@ function buildLookups(sh, ss) {
 // ─── INSTRUCTIONS ─────────────────────────────────────────────────────────────
 
 function buildInstructions(sh) {
-  cw(sh, [[1,180],[2,200],[3,180],[4,120]]);
+  cw(sh, [[1,220],[2,420],[3,300],[4,200]]);
   baseStyle(sh, 80, 4);
   sh.setFrozenRows(2);
 
@@ -458,7 +484,7 @@ function buildInstructions(sh) {
   for (let c = 2; c <= 4; c++) sh.getRange(1, c).setBackground(PRP);
 
   sh.getRange(2, 1).setValue('UK GDPR Article 46 · Based on ICO TRA Tool (November 2022)')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   for (let c = 2; c <= 4; c++) sh.getRange(2, c).setBackground(SEL);
 
   var r = 3;
@@ -495,7 +521,7 @@ function buildInstructions(sh) {
   nav.forEach(function(row) {
     sh.getRange(r, 1).setValue(row[0]).setBackground(BG).setFontColor(CYN).setFontSize(9).setWrap(true);
     sh.getRange(r, 2).setValue(row[1]).setBackground(BG).setFontColor(FG).setFontSize(9).setWrap(true);
-    sh.getRange(r, 3).setValue(row[2]).setBackground(BG).setFontColor(CMT).setFontSize(9).setWrap(true);
+    sh.getRange(r, 3).setValue(row[2]).setBackground(BG).setFontColor(FG).setFontSize(9).setWrap(true);
     sh.getRange(r, 4).setBackground(BG);
     sh.setRowHeight(r++, 26);
   });
@@ -548,10 +574,11 @@ function buildQ1(sh) {
 
   h1(sh, 1, 1, 'Q1 · Specific circumstances of the restricted transfer');
   sh.getRange(1, 2).setBackground(PRP);
-  sh.getRange(1, 3).setValue('→ Q2').setBackground(PRP).setFontColor(YLW).setFontWeight('bold').setHorizontalAlignment('right');
+  sh.getRange(1, 3).setBackground(PRP);
+  navLink(sh, 1, 3, [['→ Q2', 'Q2 · PI Risk Scores']]);
 
   sh.getRange(2, 1).setValue('Table 1 — complete all fields. You may cross-refer to your IDTA or Article 46 mechanism.')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
 
@@ -566,7 +593,7 @@ function buildQ1(sh) {
   function field(labelTxt, guidanceTxt, ddName) {
     lbl(sh, r, 1, labelTxt);
     sh.getRange(r, 3).setValue(guidanceTxt)
-      .setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic').setWrap(true);
+      .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
     r++;
     if (ddName) {
       ddNamed(sh, r, 2, ddName);
@@ -586,7 +613,7 @@ function buildQ1(sh) {
 
   lbl(sh, r, 1, '(4) Organisation type — notes');
   sh.getRange(r, 3).setValue('e.g. name of group, size, regulator')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic');
+    .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic');
   r++;
   inp(sh, r, 2);
   sh.getRange(r, 1).setBackground(BG);
@@ -596,7 +623,7 @@ function buildQ1(sh) {
 
   lbl(sh, r, 1, '(5) Importer\'s relevant activities');
   sh.getRange(r, 3).setValue('What will the importer do with the PI? Describe their activities / services.')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic').setWrap(true);
+    .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
   r++;
   inp(sh, r, 2);
   sh.getRange(r, 1).setBackground(BG);
@@ -613,7 +640,7 @@ function buildQ1(sh) {
 
   lbl(sh, r, 1, '(6a) Vulnerability status');
   sh.getRange(r, 3).setValue('Select all that apply')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8);
+    .setBackground(BG).setFontColor(FG).setFontSize(8);
   r++;
   ddNamed(sh, r, 2, 'DD_VULN');
   sh.getRange(r, 1).setBackground(BG);
@@ -623,7 +650,7 @@ function buildQ1(sh) {
 
   h3(sh, r, 1, '(6b) Categories of people — tick all that apply');
   sh.getRange(r, 2).setBackground(BG);
-  sh.getRange(r, 3).setValue('✔').setBackground(BG).setFontColor(CMT).setFontSize(9).setHorizontalAlignment('center');
+  sh.getRange(r, 3).setValue('✔').setBackground(BG).setFontColor(FG).setFontSize(9).setHorizontalAlignment('center');
   r++;
 
   var peopleCats = [
@@ -672,7 +699,7 @@ function buildQ1(sh) {
   ];
   volFields.forEach(function(vf) {
     lbl(sh, r, 1, vf[0]);
-    sh.getRange(r, 3).setValue(vf[1]).setBackground(BG).setFontColor(CMT).setFontSize(8);
+    sh.getRange(r, 3).setValue(vf[1]).setBackground(BG).setFontColor(FG).setFontSize(8);
     r++;
     inp(sh, r, 2);
     sh.getRange(r, 1).setBackground(BG);
@@ -689,7 +716,7 @@ function buildQ1(sh) {
 
   lbl(sh, r, 1, '(8) Frequency of transfers');
   sh.getRange(r, 3).setValue('How often will transfers occur?')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8);
+    .setBackground(BG).setFontColor(FG).setFontSize(8);
   r++;
   ddNamed(sh, r, 2, 'DD_FREQUENCY');
   sh.getRange(r, 1).setBackground(BG);
@@ -708,7 +735,7 @@ function buildQ1(sh) {
 
   lbl(sh, r, 1, '(9) Duration of arrangement with importer');
   sh.getRange(r, 3).setValue('How long can the importer receive / access the PI?')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8);
+    .setBackground(BG).setFontColor(FG).setFontSize(8);
   r++;
   inp(sh, r, 2);
   sh.getRange(r, 1).setBackground(BG);
@@ -730,7 +757,7 @@ function buildQ1(sh) {
   ];
   protFields.forEach(function(pf) {
     lbl(sh, r, 1, pf[0]);
-    sh.getRange(r, 3).setValue(pf[1]).setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic').setWrap(true);
+    sh.getRange(r, 3).setValue(pf[1]).setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
     r++;
     inp(sh, r, 2);
     sh.getRange(r, 1).setBackground(BG);
@@ -756,17 +783,16 @@ function buildQ2(sh, ss) {
 
   h1(sh, 1, 1, 'Q2 · What is the risk level in the personal information you are transferring?');
   for (let c = 2; c <= 9; c++) sh.getRange(1, c).setBackground(PRP);
-  sh.getRange(1, 9).setValue('← Q1  → Q3').setBackground(PRP).setFontColor(YLW)
-    .setFontWeight('bold').setHorizontalAlignment('right');
+  navLink(sh, 1, 9, [['← Q1', 'Q1 · Transfer Details'], ['→ Q3', 'Q3 · Investigation Level']]);
 
   // Score key row
-  sh.getRange(2, 1).setValue('Score key:').setBackground(SEL).setFontColor(CMT).setFontSize(9);
+  sh.getRange(2, 1).setValue('Score key:').setBackground(SEL).setFontColor(FG).setFontSize(9);
   for (let s = 1; s <= 5; s++) {
     sh.getRange(2, 1 + s).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(8).setFontWeight('bold').setHorizontalAlignment('center');
   }
   sh.getRange(2, 7).setValue('Adjust ±1 from ICO initial score based on factors')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(8).setWrap(true);
+    .setBackground(SEL).setFontColor(FG).setFontSize(8).setWrap(true);
   sh.getRange(2, 8).setBackground(SEL);
   sh.getRange(2, 9).setBackground(SEL);
   sh.setRowHeight(2, 22);
@@ -789,7 +815,7 @@ function buildQ2(sh, ss) {
 
     // A: row number
     sh.getRange(r, 1).setValue(i + 1)
-      .setBackground(SEL).setFontColor(CMT).setFontSize(9).setHorizontalAlignment('center');
+      .setBackground(SEL).setFontColor(FG).setFontSize(9).setHorizontalAlignment('center');
 
     // B: category name — dropdown from PI_NAMES
     ddNamed(sh, r, 2, 'PI_NAMES');
@@ -890,10 +916,10 @@ function buildQ3(sh, ss) {
   h1(sh, 1, 1, 'Q3 · What is a reasonable and proportionate level of investigation?');
   sh.getRange(1, 2).setBackground(PRP);
   sh.getRange(1, 3).setBackground(PRP);
-  sh.getRange(1, 4).setValue('← Q2  → Q4').setBackground(PRP).setFontColor(YLW).setFontWeight('bold').setHorizontalAlignment('right');
+  navLink(sh, 1, 4, [['← Q2', 'Q2 · PI Risk Scores'], ['→ Q4', 'Q4 · Human Rights Risk']]);
 
   sh.getRange(2, 1).setValue('Tables 3 & 4 — three factors determine the required investigation level.')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
   sh.getRange(2, 4).setBackground(SEL);
@@ -1098,10 +1124,10 @@ function buildQ4(sh, ss) {
 
   h1(sh, 1, 1, 'Q4 · Is the transfer significantly increasing the risk of a human rights breach?');
   sh.getRange(1, 2).setBackground(PRP);
-  sh.getRange(1, 3).setValue('← Q3  → Q5').setBackground(PRP).setFontColor(YLW).setFontWeight('bold').setHorizontalAlignment('right');
+  navLink(sh, 1, 3, [['← Q3', 'Q3 · Investigation Level'], ['→ Q5', 'Q5 · Enforcement']]);
 
   sh.getRange(2, 1).setValue('Table 6: Record of investigation and human rights risk assessment.')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
 
@@ -1140,7 +1166,7 @@ function buildQ4(sh, ss) {
     sh.getRange(r, 1).setValue(rt[0])
       .setBackground(SEL).setFontColor(PRP).setFontWeight('bold').setFontSize(9);
     sh.getRange(r, 2).setValue(rt[1])
-      .setBackground(BG).setFontColor(CMT).setFontSize(9).setWrap(true);
+      .setBackground(BG).setFontColor(FG).setFontSize(9).setWrap(true);
     sh.getRange(r, 3).setBackground(BG);
     r++;
   });
@@ -1176,7 +1202,7 @@ function buildQ4(sh, ss) {
   h3(sh, r, 1, 'Key Question 1: Any concerns about human rights in the destination country?');
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setValue('From your investigation — see Table 5 above')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic');
+    .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic');
   r++;
   ddNamed(sh, r, 2, 'DD_KQ4_1');
   sh.getRange(r, 1).setBackground(BG);
@@ -1199,7 +1225,7 @@ function buildQ4(sh, ss) {
   h3(sh, r, 1, 'Key Question 2: By making this transfer, are you making the risk SIGNIFICANTLY WORSE for the people?');
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setValue('Consider: more likely a breach will happen, OR more severe if it did. Risk must be clear, meaningful and linked to this transfer.')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic').setWrap(true);
+    .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
   r++;
   ddNamed(sh, r, 2, 'DD_KQ4_2');
   sh.getRange(r, 1).setBackground(BG);
@@ -1258,10 +1284,10 @@ function buildQ5(sh, ss) {
 
   h1(sh, 1, 1, 'Q5 · Can the Article 46 transfer mechanism be enforced against the importer?');
   sh.getRange(1, 2).setBackground(PRP);
-  sh.getRange(1, 3).setValue('← Q4  → Q6').setBackground(PRP).setFontColor(YLW).setFontWeight('bold').setHorizontalAlignment('right');
+  navLink(sh, 1, 3, [['← Q4', 'Q4 · Human Rights Risk'], ['→ Q6', 'Q6 · Exceptions']]);
 
   sh.getRange(2, 1).setValue('Table 7: Enforcement questionnaire.')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
 
@@ -1283,7 +1309,7 @@ function buildQ5(sh, ss) {
   function eq(labelTxt, guidanceTxt, ddName, namedRange) {
     lbl(sh, r, 1, labelTxt);
     sh.getRange(r, 2).setBackground(BG);
-    sh.getRange(r, 3).setValue(guidanceTxt).setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic').setWrap(true);
+    sh.getRange(r, 3).setValue(guidanceTxt).setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
     r++;
     ddNamed(sh, r, 2, ddName);
     sh.getRange(r, 1).setBackground(BG);
@@ -1306,7 +1332,7 @@ function buildQ5(sh, ss) {
   h3(sh, r, 1, 'EQ3: Is there a HIGH likelihood the importer will accept a UK Court decision or UK arbitration award?');
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setValue('Consider factors (a)–(d) below — tick those that are satisfied.')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8).setFontStyle('italic').setWrap(true);
+    .setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic').setWrap(true);
   r++;
 
   var eq3Factors = [
@@ -1364,7 +1390,7 @@ function buildQ5(sh, ss) {
   r++;
 
   sh.getRange(r, 1).setValue('Significant risk data = human rights risk data (Q4) OR enforceability risk data (D5). Must pass Q6 exceptions test to be transferred.')
-    .setBackground(BG).setFontColor(CMT).setFontSize(9).setFontStyle('italic').setWrap(true);
+    .setBackground(BG).setFontColor(FG).setFontSize(9).setFontStyle('italic').setWrap(true);
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r++, 30);
@@ -1412,10 +1438,10 @@ function buildQ6(sh, ss) {
 
   h1(sh, 1, 1, 'Q6 · Do any of the exceptions apply to the significant risk data?');
   for (let c = 2; c <= 6; c++) sh.getRange(1, c).setBackground(PRP);
-  sh.getRange(1, 6).setValue('← Q5').setBackground(PRP).setFontColor(YLW).setFontWeight('bold').setHorizontalAlignment('right');
+  navLink(sh, 1, 6, [['← Q5', 'Q5 · Enforcement']]);
 
   sh.getRange(2, 1).setValue('Table 8: Exceptions checklist.')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   for (let c = 2; c <= 6; c++) sh.getRange(2, c).setBackground(SEL);
 
   sh.getRange(3, 1).setValue('⚠️ Only complete if significant risk data identified at Decision Point E. Article 46 mechanism provides SOME (not all) appropriate safeguards.')
@@ -1528,7 +1554,7 @@ function buildSummary(sh) {
   sh.getRange(1, 3).setBackground(PRP);
 
   sh.getRange(2, 1).setValue('Auto-calculated from your answers across Q1–Q6. Keep this tab as your TRA record.')
-    .setBackground(SEL).setFontColor(CMT).setFontSize(9).setFontStyle('italic');
+    .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
 
@@ -1579,7 +1605,7 @@ function buildSummary(sh) {
     sh.getRange(r, 1).setValue(dp[0])
       .setBackground(SEL).setFontColor(PRP).setFontWeight('bold').setFontSize(11).setHorizontalAlignment('center');
     sh.getRange(r, 2).setValue(dp[1])
-      .setBackground(BG).setFontColor(CMT).setFontSize(10);
+      .setBackground(BG).setFontColor(FG).setFontSize(10);
     var resultCell = sh.getRange(r, 3);
     resultCell.setFormula(dp[2])
       .setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
@@ -1628,7 +1654,7 @@ function buildSummary(sh) {
 
   sh.getRange(r, 1)
     .setValue('⚠️ This tool follows the ICO TRA Tool (November 2022). It is not legal advice. The ICO TRA Tool is one method of carrying out a TRA — other methods exist. Seek professional data protection advice to review your assessment.')
-    .setBackground(BG).setFontColor(CMT).setFontSize(8).setWrap(true);
+    .setBackground(BG).setFontColor(FG).setFontSize(8).setWrap(true);
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
   sh.setRowHeight(r, 40);
@@ -1870,7 +1896,7 @@ function buildKrooPICategories(sh) {
 
     // A: category label (muted, repeated for readability)
     sh.getRange(r, 1).setValue(category)
-      .setBackground(BG).setFontColor(CMT).setFontSize(8);
+      .setBackground(BG).setFontColor(FG).setFontSize(8);
 
     // B: data element name
     sh.getRange(r, 2).setValue(name)
@@ -1895,7 +1921,7 @@ function buildKrooPICategories(sh) {
 
     // F: regulatory context
     sh.getRange(r, 6).setValue(regCtx)
-      .setBackground(BG).setFontColor(CMT).setFontSize(8).setWrap(true);
+      .setBackground(BG).setFontColor(FG).setFontSize(8).setWrap(true);
 
     // G: notes
     sh.getRange(r, 7).setValue(notes)
@@ -1933,7 +1959,7 @@ function buildKrooPICategories(sh) {
   ];
   legend.forEach(function(lg) {
     sh.getRange(r, 1).setValue(lg[2]).setBackground(lg[0]).setFontColor(lg[1]).setFontSize(9).setFontWeight('bold').setWrap(true);
-    sh.getRange(r, 2).setValue(lg[3]).setBackground(BG).setFontColor(CMT).setFontSize(8).setWrap(true);
+    sh.getRange(r, 2).setValue(lg[3]).setBackground(BG).setFontColor(FG).setFontSize(8).setWrap(true);
     for (let c = 3; c <= 7; c++) sh.getRange(r, c).setBackground(BG);
     sh.setRowHeight(r++, 40);
   });
