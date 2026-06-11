@@ -482,7 +482,7 @@ function buildLookups(sh, ss) {
     ['Micro Enterprise (People: < 10; Turnover: ≤ £2 million; Balance sheet: ≤ £2 million)',
      'Small Enterprise (People: < 50; Turnover: ≤ £10 million; Balance sheet: ≤ £10 million)',
      'Medium Enterprise (People: < 250; Turnover: ≤ £50 million; Balance sheet: ≤ £43 million)',
-     'Large Enterprise (People: > 250)',
+     'Large Enterprise (People: >250 …)',
      'SME (Tier 1 or Tier 2 data protection fee payer)',
      'Large business'], 280);
 
@@ -780,12 +780,13 @@ function buildInstructions(sh) {
 
   var r = 3;
 
-  h2(sh, r++, 1, 'About this tool');
+  h2(sh, r, 1, 'About this tool');
+  for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(SEL);
+  mergeRow(sh, r, 1, 4);
+  r++;
   [
     'Helps you carry out and record a TRA for restricted international transfers of personal information under UK GDPR.',
-    'You do NOT have to use this template, but you must record your TRA. This sheet follows the ICO TRA Tool structure exactly.',
     'Designed for a straightforward transfer: one importer, one destination country. Adapt for more complex flows.',
-    'Seek professional data protection advice if needed.',
   ].forEach(function(t) {
     sh.getRange(r, 1).setValue(t).setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
     for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(BG);
@@ -819,12 +820,16 @@ function buildInstructions(sh) {
   });
 
   spacer(sh, r++);
-  h2(sh, r++, 1, 'Score key (1–5)');
+  // Score key — heading and values in col C, colour spans full row
+  sh.getRange(r, 1).setBackground(SEL);
+  sh.getRange(r, 2).setBackground(SEL);
+  sh.getRange(r, 3).setValue('Score key (1–5)')
+    .setBackground(SEL).setFontColor(CYN).setFontWeight('bold').setFontSize(9);
+  sh.getRange(r, 4).setBackground(SEL);
+  r++;
   for (let s = 1; s <= 5; s++) {
-    sh.getRange(r, 1).setValue(SLB[s])
-      .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(10).setFontWeight('bold');
-    for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(SBG[s]);
-    mergeRow(sh, r, 1, 4);
+    for (let c = 1; c <= 4; c++) sh.getRange(r, c).setBackground(SBG[s]);
+    sh.getRange(r, 3).setValue(SLB[s]).setFontColor(SFG[s]).setFontSize(10).setFontWeight('bold');
     r++;
   }
 
@@ -900,7 +905,7 @@ function buildQ1(sh) {
     spacer(sh, r++);
   }
 
-  field('(1) Name of importer',          'Who is the personal information going to?');
+  field('(1) Name of importer',          'To whom is the personal information going?');
   field('(2) Destination country',        'Country (or countries) the PI is going to', 'DD_COUNTRIES');
   field('(3) Status of importer',         'Select importer type',                          'DD_IMPORTER_STATUS');
   field('(4) Importer organisation type', 'What kind of organisation? Add detail in notes', 'DD_ORG_TYPE');
@@ -1203,7 +1208,7 @@ function buildQ3(sh, ss) {
 
   var factors = [
     ['Factor 1', 'Risk level in PI (max score from Q2, Decision Point A)'],
-    ['Factor 2', 'Size of your organisation (SME = Tier 1 or 2 data protection fee payer)'],
+    ['Factor 2', 'Size of the organisation'],
     ['Factor 3', 'Total volume of PI being transferred'],
   ];
   factors.forEach(function(f) {
@@ -1211,7 +1216,7 @@ function buildQ3(sh, ss) {
     sh.getRange(r, 2).setValue(f[1]).setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
     sh.getRange(r, 3).setBackground(BG);
     sh.getRange(r, 4).setBackground(BG);
-    mergeRow(sh, r, 2, 4);
+    mergeRow(sh, r, 2, 3);
     r++;
   });
   spacer(sh, r++);
@@ -1289,7 +1294,7 @@ function buildQ3(sh, ss) {
     ['Micro Enterprise',  'No investigation needed', 'Level 1', 'Low vol → Level 2\nHigh vol → Level 3'],
     ['Small Enterprise',  'No investigation needed', 'Level 1', 'Low vol → Level 2\nHigh vol → Level 3'],
     ['Medium Enterprise', 'No investigation needed', 'Level 2', 'Level 3'],
-    ['Large business',    'No investigation needed', 'Level 2', 'Level 3'],
+    ['Large business',    'No investigation needed', 'Level 3', 'Level 3'],
   ];
   matRows.forEach(function(mrow) {
     mrow.forEach(function(cell, i) {
@@ -1476,8 +1481,8 @@ function buildQ4(sh, ss) {
     'IF(ISNUMBER(SEARCH("SOME categories",KQ4_2)),"🔴 C4 — Transfer significantly increases human rights risk for SOME PI categories. → Go to Decision Point E(4). List those categories below. Then go to Q5 (or Q6 if Level 3 Option ii).",' +
     '"⏳ Review answers above")))))';
 
-  dpCell(sh, r, 1, dpCf);
-  sh.getRange(r, 2).setBackground(BG);
+  dpCell(sh, r, 2, dpCf);
+  sh.getRange(r, 1).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
   r++;
   spacer(sh, r++);
@@ -1587,8 +1592,8 @@ function buildQ5(sh, ss) {
     'IF(ISNUMBER(SEARCH("No →",EQ5_4)),"🔴 D5 — Concerns about enforceability. You and the people may not be able to enforce the mechanism in the UK or destination country. → Go to Decision Point E(5).",' +
     '"⏳ Review answers above"))))))';
 
-  dpCell(sh, r, 1, dpDf);
-  sh.getRange(r, 2).setBackground(BG);
+  dpCell(sh, r, 2, dpDf);
+  sh.getRange(r, 1).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
   r++;
   spacer(sh, r++);
@@ -1618,8 +1623,8 @@ function buildQ5(sh, ss) {
     'IF(ISNUMBER(SEARCH("E1",DP_E)),"✅ E1 — No significant risk data. MAY PROCEED with the transfer.",' +
     '"🔴 Significant risk data identified: "&DP_E&" → Complete Q6 · Exceptions."))';
 
-  dpCell(sh, r, 1, dpEresultF);
-  sh.getRange(r, 2).setBackground(BG);
+  dpCell(sh, r, 2, dpEresultF);
+  sh.getRange(r, 1).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
   r++;
   spacer(sh, r++);
@@ -1727,8 +1732,8 @@ function buildQ6(sh, ss) {
     '"✅ MAY PROCEED — One or more exceptions apply to all significant risk data.",' +
     '"❌ CANNOT PROCEED — Exceptions do not apply to all significant risk data. May NOT proceed. Consider removing significant risk data from scope and repeating the TRA."))';
 
-  dpCell(sh, r, 1, dpFf);
-  for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
+  dpCell(sh, r, 2, dpFf);
+  for (let c = 1; c <= 6; c++) { if (c !== 2) sh.getRange(r, c).setBackground(BG); }
   r++;
   spacer(sh, r++);
 
@@ -2140,7 +2145,7 @@ function buildKrooPICategories(sh) {
     sh.getRange(r, 1).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(9).setFontWeight('bold');
     for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SBG[s]);
-    mergeRow(sh, r, 1, 7);
+    mergeRow(sh, r, 2, 6);
     r++;
   }
 
