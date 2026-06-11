@@ -1,3 +1,13 @@
 node_modules/
 pnpm-lock.yaml
 .DS_Store
+
+# API cache / downloaded artefacts — do not commit
+sheet_structure.json
+sheet_validation.json
+countries_list.json
+diff_report.json
+comparison_report.json
+live.xlsx
+reference.xlsx
+.venv/

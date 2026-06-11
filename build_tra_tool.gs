@@ -103,11 +103,58 @@ function buildTRATool() {
   );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Utility: remove spacer rows ──────────────────────────────────────────────
+// Deletes all rows with height ≤ 2px from every working sheet (or just the
+// active sheet). Run removeSpacerRows() from the Apps Script editor or a menu.
+// eslint-disable-next-line no-unused-vars
+function removeSpacerRows() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var skipTabs = ['Lookups'];
+  var sheets = ss.getSheets().filter(function(sh) {
+    return skipTabs.indexOf(sh.getName()) === -1;
+  });
 
-function cw(sh, arr) {
-  arr.forEach(function(pair) { sh.setColumnWidth(pair[0], pair[1]); });
+  var totalDeleted = 0;
+
+  sheets.forEach(function(sh) {
+    var maxRow = sh.getLastRow();
+    // Collect spacer rows bottom-up so deleting doesn't shift indices
+    var toDelete = [];
+    for (var r = maxRow; r >= 1; r--) {
+      if (sh.getRowHeight(r) <= 2) toDelete.push(r);
+    }
+    toDelete.forEach(function(r) { sh.deleteRow(r); });
+    totalDeleted += toDelete.length;
+  });
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Removed ' + totalDeleted + ' spacer row(s) across ' + sheets.length + ' sheet(s).'
+  );
 }
+
+// Remove spacer rows from the currently active sheet only
+// eslint-disable-next-line no-unused-vars
+function removeSpacerRowsActiveSheet() {
+  var sh = SpreadsheetApp.getActiveSheet();
+  var maxRow = sh.getLastRow();
+  var toDelete = [];
+  for (var r = maxRow; r >= 1; r--) {
+    if (sh.getRowHeight(r) <= 2) toDelete.push(r);
+  }
+  toDelete.forEach(function(r) { sh.deleteRow(r); });
+  SpreadsheetApp.getUi().alert(
+    '✅ Removed ' + toDelete.length + ' spacer row(s) from "' + sh.getName() + '".'
+  );
+}
+
+
+
+// Row merge helper
+function mergeRow(sh, r, c1, c2) {
+  sh.getRange(r, c1, 1, c2 - c1 + 1).merge();
+}
+
+
 
 function baseStyle(sh, rows, cols) {
   sh.getRange(1, 1, rows, cols)
@@ -400,7 +447,11 @@ function buildLookups(sh, ss) {
   col = list(col, 'DD_SCORES', 'Score (1–5)', ['1','2','3','4','5'], 90);
 
   col = list(col, 'DD_IMPORTER_STATUS', 'Importer status',
-    ['Controller','Processor','Sub-processor','Joint controller']);
+    ['Controller',
+     'Joint controller',
+     'Independent / Separate Controllers',
+     'Processor',
+     'Sub-processor']);
 
   col = list(col, 'DD_ORG_TYPE', 'Organisation type',
     ['Commercial — standard',
@@ -426,7 +477,11 @@ function buildLookups(sh, ss) {
      'Continuous — specify period in notes']);
 
   col = list(col, 'DD_BIZ_SIZE', 'Organisation size',
-    ['SME (Tier 1 or Tier 2 data protection fee payer)',
+    ['Micro Enterprise (People: < 10; Turnover: ≤ £2 million; Balance sheet: ≤ £2 million)',
+     'Small Enterprise (People: < 50; Turnover: ≤ £10 million; Balance sheet: ≤ £10 million)',
+     'Medium Enterprise (People: < 250; Turnover: ≤ £50 million; Balance sheet: ≤ £43 million)',
+     'Large Enterprise (People: > 250)',
+     'SME (Tier 1 or Tier 2 data protection fee payer)',
      'Large business'], 280);
 
   col = list(col, 'DD_XFER_VOL', 'Transfer volume',
@@ -488,6 +543,212 @@ function buildLookups(sh, ss) {
     ['F1 — One or more exceptions apply to ALL significant risk data. May proceed.',
      'F2 — Exceptions do NOT apply to all significant risk data. May NOT proceed.'], 440);
 
+  col = list(col, 'DD_COUNTRIES', 'Countries & territories',
+    [
+     'Abkhazia',
+     'Afghanistan',
+     'Albania',
+     'Algeria',
+     'Andorra',
+     'Angola',
+     'Antigua and Barbuda',
+     'Argentina',
+     'Armenia',
+     'Australia',
+     'Austria',
+     'Azerbaijan',
+     'Bahamas',
+     'Bahrain',
+     'Bangladesh',
+     'Barbados',
+     'Belarus',
+     'Belgium',
+     'Belize',
+     'Benin',
+     'Bhutan',
+     'Bolivia',
+     'Bosnia and Herzegovina',
+     'Botswana',
+     'Brazil',
+     'Brunei',
+     'Bulgaria',
+     'Burkina Faso',
+     'Burundi',
+     'Cabo Verde',
+     'Cambodia',
+     'Cameroon',
+     'Canada',
+     'Central African Republic',
+     'Chad',
+     'Chile',
+     'China',
+     'Colombia',
+     'Comoros',
+     'Congo (Brazzaville)',
+     'Congo (Democratic Republic)',
+     'Costa Rica',
+     'Croatia',
+     'Cuba',
+     'Cyprus',
+     'Czechia',
+     'Denmark',
+     'Djibouti',
+     'Dominica',
+     'Dominican Republic',
+     'Ecuador',
+     'Egypt',
+     'El Salvador',
+     'Equatorial Guinea',
+     'Eritrea',
+     'Estonia',
+     'Eswatini',
+     'Ethiopia',
+     'Fiji',
+     'Finland',
+     'France',
+     'Gabon',
+     'Gambia',
+     'Gaza Strip',
+     'Georgia',
+     'Germany',
+     'Ghana',
+     'Greece',
+     'Grenada',
+     'Guatemala',
+     'Guinea',
+     'Guinea-Bissau',
+     'Guyana',
+     'Haiti',
+     'Honduras',
+     'Hungary',
+     'Iceland',
+     'India',
+     'Indonesia',
+     'Iran',
+     'Iraq',
+     'Ireland',
+     'Israel',
+     'Italy',
+     'Ivory Coast',
+     'Jamaica',
+     'Japan',
+     'Jordan',
+     'Kazakhstan',
+     'Kenya',
+     'Kiribati',
+     'Kosovo',
+     'Kuwait',
+     'Kyrgyzstan',
+     'Laos',
+     'Latvia',
+     'Lebanon',
+     'Lesotho',
+     'Liberia',
+     'Libya',
+     'Liechtenstein',
+     'Lithuania',
+     'Luxembourg',
+     'Madagascar',
+     'Malawi',
+     'Malaysia',
+     'Maldives',
+     'Mali',
+     'Malta',
+     'Marshall Islands',
+     'Mauritania',
+     'Mauritius',
+     'Mexico',
+     'Micronesia',
+     'Moldova',
+     'Monaco',
+     'Mongolia',
+     'Montenegro',
+     'Morocco',
+     'Mozambique',
+     'Myanmar',
+     'Namibia',
+     'Nauru',
+     'Nepal',
+     'Netherlands',
+     'New Zealand',
+     'Nicaragua',
+     'Niger',
+     'Nigeria',
+     'Northern Cyprus',
+     'North Macedonia',
+     'Norway',
+     'Oman',
+     'Pakistan',
+     'Palau',
+     'Palestine',
+     'Panama',
+     'Papua New Guinea',
+     'Paraguay',
+     'Peru',
+     'Philippines',
+     'Poland',
+     'Portugal',
+     'Qatar',
+     'Romania',
+     'Russia',
+     'Rwanda',
+     'Saint Kitts and Nevis',
+     'Saint Lucia',
+     'Saint Vincent and the Grenadines',
+     'Samoa',
+     'San Marino',
+     'Sao Tome and Principe',
+     'Saudi Arabia',
+     'Senegal',
+     'Serbia',
+     'Seychelles',
+     'Sierra Leone',
+     'Singapore',
+     'Slovakia',
+     'Slovenia',
+     'Solomon Islands',
+     'Somalia',
+     'Somaliland',
+     'South Africa',
+     'South Ossetia',
+     'South Sudan',
+     'Spain',
+     'Sri Lanka',
+     'Sudan',
+     'Suriname',
+     'Sweden',
+     'Switzerland',
+     'Syria',
+     'Tajikistan',
+     'Taiwan',
+     'Tanzania',
+     'Thailand',
+     'Timor-Leste',
+     'Togo',
+     'Tonga',
+     'Transnistria',
+     'Trinidad and Tobago',
+     'Tunisia',
+     'Turkey',
+     'Turkmenistan',
+     'Tuvalu',
+     'Uganda',
+     'Ukraine',
+     'United Arab Emirates',
+     'United Kingdom',
+     'United States of America',
+     'Uruguay',
+     'Uzbekistan',
+     'Vanuatu',
+     'Vatican City',
+     'Venezuela',
+     'Vietnam',
+     'Western Sahara',
+     'Yemen',
+     'Zambia',
+     'Zimbabwe'], 200);
+
+
   // ── Score key ──────────────────────────────────────────────────────────────
   sh.setColumnWidth(col, 160);
   sh.getRange(2, col).setValue('Score key')
@@ -508,10 +769,12 @@ function buildInstructions(sh) {
 
   h1(sh, 1, 1, '🔒  ICO Transfer Risk Assessment (TRA) Tool');
   for (let c = 2; c <= 4; c++) sh.getRange(1, c).setBackground(PRP);
+  mergeRow(sh, 1, 1, 4);
 
   sh.getRange(2, 1).setValue('UK GDPR Article 46 · Based on ICO TRA Tool (November 2022)')
     .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   for (let c = 2; c <= 4; c++) sh.getRange(2, c).setBackground(SEL);
+  mergeRow(sh, 2, 1, 4);
 
   var r = 3;
 
@@ -524,6 +787,7 @@ function buildInstructions(sh) {
   ].forEach(function(t) {
     sh.getRange(r, 1).setValue(t).setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
     for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(BG);
+    mergeRow(sh, r, 1, 4);
     sh.setRowHeight(r++, 30);
   });
 
@@ -558,6 +822,7 @@ function buildInstructions(sh) {
     sh.getRange(r, 1).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(10).setFontWeight('bold');
     for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(SBG[s]);
+    mergeRow(sh, r, 1, 4);
     r++;
   }
 
@@ -572,6 +837,7 @@ function buildInstructions(sh) {
   guide.forEach(function(g) {
     sh.getRange(r, 1).setValue('  ' + g[2]).setBackground(g[0]).setFontColor(g[1]).setFontSize(10);
     for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(g[0]);
+    mergeRow(sh, r, 1, 4);
     r++;
   });
 
@@ -587,6 +853,7 @@ function buildInstructions(sh) {
     sh.getRange(r, 2).setValue(t[1]).setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
     sh.getRange(r, 3).setBackground(BG);
     sh.getRange(r, 4).setBackground(BG);
+    mergeRow(sh, r, 2, 4);
     r++;
   });
 }
@@ -594,19 +861,21 @@ function buildInstructions(sh) {
 // ─── Q1 · TRANSFER DETAILS ────────────────────────────────────────────────────
 
 function buildQ1(sh) {
-  cw(sh, [[1,160],[2,200],[3,160]]);
+  cw(sh, [[1,422],[2,269],[3,365]]);
   baseStyle(sh, 130, 3);
   sh.setFrozenRows(2);
 
   h1(sh, 1, 1, 'Q1 · Specific circumstances of the restricted transfer');
   sh.getRange(1, 2).setBackground(PRP);
   sh.getRange(1, 3).setBackground(PRP);
+  mergeRow(sh, 1, 1, 2);
   navLink(sh, 1, 3, [['→ Q2', 'Q2 · PI Risk Scores']]);
 
   sh.getRange(2, 1).setValue('Table 1 — complete all fields. You may cross-refer to your IDTA or Article 46 mechanism.')
     .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
+  mergeRow(sh, 2, 1, 3);
 
   var r = 3;
 
@@ -630,7 +899,7 @@ function buildQ1(sh) {
   }
 
   field('(1) Name of importer',          'Who is the personal information going to?');
-  field('(2) Destination country',        'Country (or countries) the PI is going to');
+  field('(2) Destination country',        'Country (or countries) the PI is going to', 'DD_COUNTRIES');
   field('(3) Status of importer',         'Select importer type',                          'DD_IMPORTER_STATUS');
   field('(4) Importer organisation type', 'What kind of organisation? Add detail in notes', 'DD_ORG_TYPE');
 
@@ -741,6 +1010,7 @@ function buildQ1(sh) {
   h2(sh, r, 1, 'PROTECTIONS FOR THE TRANSFERRED PERSONAL INFORMATION');
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 2);
   r++;
 
   var protFields = [
@@ -767,12 +1037,13 @@ function buildQ1(sh) {
 
 function buildQ2(sh, ss) {
   // Cols: A=# B=Category C=ICO Score D=Special? E=Suggested F=Aggravating G=Mitigating H=Final Score I=Notes
-  cw(sh, [[1,28],[2,200],[3,75],[4,65],[5,75],[6,160],[7,160],[8,80],[9,160]]);
+  cw(sh, [[1,139],[2,200],[3,75],[4,65],[5,75],[6,274],[7,269],[8,80],[9,323]]);
   baseStyle(sh, 80, 9);
   sh.setFrozenRows(3);
 
   h1(sh, 1, 1, 'Q2 · What is the risk level in the personal information you are transferring?');
   for (let c = 2; c <= 9; c++) sh.getRange(1, c).setBackground(PRP);
+  mergeRow(sh, 1, 1, 8);
   navLink(sh, 1, 9, [['← Q1', 'Q1 · Transfer Details'], ['→ Q3', 'Q3 · Investigation Level']]);
 
   // Score key row
@@ -864,6 +1135,7 @@ function buildQ2(sh, ss) {
   for (let c = 2; c <= 9; c++) sh.getRange(AFTER + 1, c).setBackground(BG);
   inp(sh, AFTER + 2, 2);
   for (let c = 3; c <= 9; c++) sh.getRange(AFTER + 2, c).setBackground(BG);
+  mergeRow(sh, AFTER + 2, 2, 7);
   sh.setRowHeight(AFTER + 2, 50);
 
   spacer(sh, AFTER + 3);
@@ -882,6 +1154,7 @@ function buildQ2(sh, ss) {
   var DPA_ROW = MS_ROW + 2;
   h2(sh, DPA_ROW, 1, '⬛  DECISION POINT A');
   for (let c = 2; c <= 9; c++) sh.getRange(DPA_ROW, c).setBackground(SEL);
+  mergeRow(sh, DPA_ROW, 1, 9);
 
   var dpAf =
     '=IF(MAX_SCORE="","⏳ Complete Table 2 above — enter PI categories (col B) and final scores (col H)",' +
@@ -894,18 +1167,20 @@ function buildQ2(sh, ss) {
     sh.getRange(DPA_ROW + 1, c).setBackground(BG);
     sh.setRowHeight(DPA_ROW + 1, 65);
   }
+  mergeRow(sh, DPA_ROW + 1, 1, 9);
 }
 
 // ─── Q3 · INVESTIGATION LEVEL ─────────────────────────────────────────────────
 
 function buildQ3(sh, ss) {
-  cw(sh, [[1,180],[2,200],[3,160],[4,120]]);
+  cw(sh, [[1,180],[2,258],[3,160],[4,120]]);
   baseStyle(sh, 80, 4);
   sh.setFrozenRows(2);
 
   h1(sh, 1, 1, 'Q3 · What is a reasonable and proportionate level of investigation?');
   sh.getRange(1, 2).setBackground(PRP);
   sh.getRange(1, 3).setBackground(PRP);
+  mergeRow(sh, 1, 1, 3);
   navLink(sh, 1, 4, [['← Q2', 'Q2 · PI Risk Scores'], ['→ Q4', 'Q4 · Human Rights Risk']]);
 
   sh.getRange(2, 1).setValue('Tables 3 & 4 — three factors determine the required investigation level.')
@@ -913,6 +1188,7 @@ function buildQ3(sh, ss) {
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
   sh.getRange(2, 4).setBackground(SEL);
+  mergeRow(sh, 2, 1, 3);
 
   var r = 3;
 
@@ -933,6 +1209,7 @@ function buildQ3(sh, ss) {
     sh.getRange(r, 2).setValue(f[1]).setBackground(BG).setFontColor(FG).setFontSize(10).setWrap(true);
     sh.getRange(r, 3).setBackground(BG);
     sh.getRange(r, 4).setBackground(BG);
+    mergeRow(sh, r, 2, 4);
     r++;
   });
   spacer(sh, r++);
@@ -969,15 +1246,16 @@ function buildQ3(sh, ss) {
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
   sh.getRange(r, 4).setBackground(SEL);
+  mergeRow(sh, r, 1, 4);
   r++;
 
   var recF =
     '=IF(OR(BIZ_SIZE="",XFER_VOL="",MAX_SCORE=""),"⏳ Complete inputs above",' +
     'IF(MAX_SCORE<=2,"No investigation needed — see Decision Point A",' +
     'IF(MAX_SCORE=3,' +
-      'IF(ISNUMBER(SEARCH("SME",BIZ_SIZE)),"Level 1","Level 2"),' +
+      'IF(OR(ISNUMBER(SEARCH("Micro",BIZ_SIZE)),ISNUMBER(SEARCH("Small",BIZ_SIZE)),ISNUMBER(SEARCH("Medium",BIZ_SIZE)),ISNUMBER(SEARCH("SME",BIZ_SIZE))),"Level 1","Level 2"),' +
     // max score >= 4
-    'IF(ISNUMBER(SEARCH("SME",BIZ_SIZE)),' +
+    'IF(OR(ISNUMBER(SEARCH("Micro",BIZ_SIZE)),ISNUMBER(SEARCH("Small",BIZ_SIZE)),ISNUMBER(SEARCH("Medium",BIZ_SIZE)),ISNUMBER(SEARCH("SME",BIZ_SIZE))),' +
       'IF(ISNUMBER(SEARCH("Low",XFER_VOL)),"Level 2","Level 3"),' +
       '"Level 3"))))';
 
@@ -994,6 +1272,7 @@ function buildQ3(sh, ss) {
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
   sh.getRange(r, 4).setBackground(SEL);
+  mergeRow(sh, r, 1, 4);
   r++;
 
   var matHdrs = ['', 'All PI score ≤ 2', 'PI includes score 3 (no ≥4)', 'PI includes score ≥ 4'];
@@ -1005,8 +1284,10 @@ function buildQ3(sh, ss) {
   sh.setRowHeight(r++, 30);
 
   var matRows = [
-    ['SME',           'No investigation needed', 'Level 1', 'Low vol → Level 2\nHigh vol → Level 3'],
-    ['Large business','No investigation needed', 'Level 2', 'Level 3'],
+    ['Micro Enterprise',  'No investigation needed', 'Level 1', 'Low vol → Level 2\nHigh vol → Level 3'],
+    ['Small Enterprise',  'No investigation needed', 'Level 1', 'Low vol → Level 2\nHigh vol → Level 3'],
+    ['Medium Enterprise', 'No investigation needed', 'Level 2', 'Level 3'],
+    ['Large business',    'No investigation needed', 'Level 2', 'Level 3'],
   ];
   matRows.forEach(function(mrow) {
     mrow.forEach(function(cell, i) {
@@ -1024,6 +1305,7 @@ function buildQ3(sh, ss) {
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
   sh.getRange(r, 4).setBackground(SEL);
+  mergeRow(sh, r, 1, 4);
   r++;
 
   var levels = [
@@ -1039,6 +1321,7 @@ function buildQ3(sh, ss) {
       .setBackground(BG).setFontColor(FG).setFontSize(9).setWrap(true);
     sh.getRange(r, 3).setBackground(BG);
     sh.getRange(r, 4).setBackground(BG);
+    mergeRow(sh, r, 2, 4);
     sh.setRowHeight(r++, 52);
   });
   spacer(sh, r++);
@@ -1048,40 +1331,46 @@ function buildQ3(sh, ss) {
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
   sh.getRange(r, 4).setBackground(SEL);
+  mergeRow(sh, r, 1, 4);
   r++;
 
   lbl(sh, r, 1, 'Select the investigation level you will carry out:');
   ddNamed(sh, r, 2, 'DD_INV_LEVEL');
   sh.setRowHeight(r, 30);
   nr(ss, 'DP_B', sh.getRange(r, 2));
+  mergeRow(sh, r, 2, 4);
   r++;
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Reasons this level is reasonable and proportionate:');
   inp(sh, r, 2);
   sh.setRowHeight(r++, 52);
+  mergeRow(sh, r - 1, 2, 4);
   spacer(sh, r++);
 
   lbl(sh, r, 1, 'Resources used in investigation:');
   inp(sh, r, 2);
   sh.setRowHeight(r, 65);
+  mergeRow(sh, r, 2, 4);
 }
 
 // ─── Q4 · HUMAN RIGHTS RISK ───────────────────────────────────────────────────
 
 function buildQ4(sh, ss) {
-  cw(sh, [[1,180],[2,200],[3,160]]);
+  cw(sh, [[1,387],[2,320],[3,160]]);
   baseStyle(sh, 100, 3);
   sh.setFrozenRows(2);
 
   h1(sh, 1, 1, 'Q4 · Is the transfer significantly increasing the risk of a human rights breach?');
   sh.getRange(1, 2).setBackground(PRP);
+  mergeRow(sh, 1, 1, 2);
   navLink(sh, 1, 3, [['← Q3', 'Q3 · Investigation Level'], ['→ Q5', 'Q5 · Enforcement']]);
 
   sh.getRange(2, 1).setValue('Table 6: Record of investigation and human rights risk assessment.')
     .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
+  mergeRow(sh, 2, 1, 3);
 
   var r = 3;
 
@@ -1090,6 +1379,7 @@ function buildQ4(sh, ss) {
     .setBackground(SEL).setFontColor(YLW).setFontSize(9).setWrap(true);
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 3);
   sh.setRowHeight(r++, 36);
   spacer(sh, r++);
 
@@ -1097,6 +1387,7 @@ function buildQ4(sh, ss) {
   h2(sh, r, 1, 'Table 5: Key human rights (simplified ECHR) — reference only');
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 3);
   r++;
 
   var rights = [
@@ -1198,18 +1489,20 @@ function buildQ4(sh, ss) {
 
 function buildQ5(sh, ss) {
   // Cols: A=question, B=answer(dropdown), C=notes
-  cw(sh, [[1,200],[2,200],[3,160]]);
+  cw(sh, [[1,334],[2,342],[3,308]]);
   baseStyle(sh, 100, 3);
   sh.setFrozenRows(2);
 
   h1(sh, 1, 1, 'Q5 · Can the Article 46 transfer mechanism be enforced against the importer?');
   sh.getRange(1, 2).setBackground(PRP);
+  mergeRow(sh, 1, 1, 2);
   navLink(sh, 1, 3, [['← Q4', 'Q4 · Human Rights Risk'], ['→ Q6', 'Q6 · Exceptions']]);
 
   sh.getRange(2, 1).setValue('Table 7: Enforcement questionnaire.')
     .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
+  mergeRow(sh, 2, 1, 3);
 
   var r = 3;
 
@@ -1217,6 +1510,7 @@ function buildQ5(sh, ss) {
     .setBackground(SEL).setFontColor(YLW).setFontSize(9).setWrap(true);
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 3);
   sh.setRowHeight(r++, 30);
   spacer(sh, r++);
 
@@ -1279,6 +1573,7 @@ function buildQ5(sh, ss) {
   h2(sh, r, 1, '⬛  DECISION POINT D');
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 3);
   r++;
 
   var dpDf =
@@ -1300,6 +1595,7 @@ function buildQ5(sh, ss) {
   h2(sh, r, 1, '⬛  DECISION POINT E — Have you identified any "significant risk data"?');
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 3);
   r++;
 
   sh.getRange(r, 1).setValue('Significant risk data = human rights risk data (Q4) OR enforceability risk data (D5). Must pass Q6 exceptions test to be transferred.')
@@ -1335,21 +1631,24 @@ function buildQ5(sh, ss) {
 
 function buildQ6(sh, ss) {
   // Cols: A=exception name, B=description, C=applies?, D=which data, E=benefit outweighs?, F=reasons
-  cw(sh, [[1,130],[2,200],[3,80],[4,140],[5,100],[6,180]]);
+  cw(sh, [[1,234],[2,369],[3,148],[4,260],[5,100],[6,273]]);
   baseStyle(sh, 60, 6);
   sh.setFrozenRows(3);
 
   h1(sh, 1, 1, 'Q6 · Do any of the exceptions apply to the significant risk data?');
   for (let c = 2; c <= 6; c++) sh.getRange(1, c).setBackground(PRP);
+  mergeRow(sh, 1, 1, 6);
   navLink(sh, 1, 6, [['← Q5', 'Q5 · Enforcement']]);
 
   sh.getRange(2, 1).setValue('Table 8: Exceptions checklist.')
     .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   for (let c = 2; c <= 6; c++) sh.getRange(2, c).setBackground(SEL);
+  mergeRow(sh, 2, 1, 6);
 
   sh.getRange(3, 1).setValue('⚠️ Only complete if significant risk data identified at Decision Point E. Article 46 mechanism provides SOME (not all) appropriate safeguards.')
     .setBackground(SEL).setFontColor(YLW).setFontSize(9).setWrap(true);
   for (let c = 2; c <= 6; c++) sh.getRange(3, c).setBackground(SEL);
+  mergeRow(sh, 3, 1, 6);
   sh.setRowHeight(3, 30);
 
   var r = 4;
@@ -1358,6 +1657,7 @@ function buildQ6(sh, ss) {
   lbl(sh, r, 1, 'Significant risk data (from Q5, Decision Point E, auto):');
   for (let c = 2; c <= 6; c++) sh.getRange(r, c).setBackground(BG);
   auto(sh, r, 2, '=IFERROR(DP_E,"⏳ Complete Q5 first")');
+  mergeRow(sh, r, 1, 6);
   sh.setRowHeight(r++, 26);
   spacer(sh, r++);
 
@@ -1439,18 +1739,20 @@ function buildQ6(sh, ss) {
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 
 function buildSummary(sh) {
-  cw(sh, [[1,160],[2,200],[3,160]]);
+  cw(sh, [[1,160],[2,200],[3,242]]);
   baseStyle(sh, 80, 3);
   sh.setFrozenRows(2);
 
   h1(sh, 1, 1, '✅ TRA Summary — Decision Points & Final Outcome');
   sh.getRange(1, 2).setBackground(PRP);
   sh.getRange(1, 3).setBackground(PRP);
+  mergeRow(sh, 1, 1, 3);
 
   sh.getRange(2, 1).setValue('Auto-calculated from your answers across Q1–Q6. Keep this tab as your TRA record.')
     .setBackground(SEL).setFontColor(FG).setFontSize(9).setFontStyle('italic');
   sh.getRange(2, 2).setBackground(SEL);
   sh.getRange(2, 3).setBackground(SEL);
+  mergeRow(sh, 2, 1, 3);
 
   var r = 3;
 
@@ -1509,6 +1811,7 @@ function buildSummary(sh) {
   h2(sh, r, 1, '🏁  FINAL TRA OUTCOME');
   sh.getRange(r, 2).setBackground(SEL);
   sh.getRange(r, 3).setBackground(SEL);
+  mergeRow(sh, r, 1, 3);
   r++;
 
   var finalF =
@@ -1528,12 +1831,14 @@ function buildSummary(sh) {
   cfProceed(finalCell);
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
+  mergeRow(sh, r, 1, 3);
   r++;
   spacer(sh, r++);
 
   // Notes
   lbl(sh, r, 1, 'General notes and caveats:');
   inp(sh, r, 2);
+  mergeRow(sh, r, 2, 3);
   sh.setRowHeight(r++, 65);
   spacer(sh, r++);
 
@@ -1542,6 +1847,7 @@ function buildSummary(sh) {
     .setBackground(BG).setFontColor(FG).setFontSize(8).setWrap(true);
   sh.getRange(r, 2).setBackground(BG);
   sh.getRange(r, 3).setBackground(BG);
+  mergeRow(sh, r, 1, 3);
   sh.setRowHeight(r, 40);
 }
 
@@ -1733,12 +2039,13 @@ function appendKrooToLookups(sh, ss) {
 function buildKrooPICategories(sh) {
   // Cols: A=Category  B=Data element  C=Score  D=Special cat?
   //       E=Inference risk?  F=Regulatory context  G=Notes
-  cw(sh, [[1,130],[2,195],[3,55],[4,60],[5,65],[6,155],[7,195]]);
+  cw(sh, [[1,130],[2,195],[3,55],[4,60],[5,65],[6,155],[7,399]]);
   baseStyle(sh, 160, 7);
   sh.setFrozenRows(3);
 
   h1(sh, 1, 1, '🏦 Kroo — PI Data Categories, Risk Scores & Regulatory Context');
   for (let c = 2; c <= 7; c++) sh.getRange(1, c).setBackground(PRP);
+  mergeRow(sh, 1, 1, 7);
 
   sh.getRange(2, 1).setValue(
     '⚠️ INFERENCE RISK: Transaction and location data may reveal GDPR Art 9 special category data by inference. ' +
@@ -1747,6 +2054,7 @@ function buildKrooPICategories(sh) {
     'health, or political opinions. ICO guidance: special category data includes information from which Art 9 data CAN BE INFERRED.'
   ).setBackground(SEL).setFontColor(YLW).setFontSize(9).setWrap(true);
   for (let c = 2; c <= 7; c++) sh.getRange(2, c).setBackground(SEL);
+  mergeRow(sh, 2, 1, 7);
   sh.setRowHeight(2, 52);
 
   // Column headers
@@ -1775,6 +2083,7 @@ function buildKrooPICategories(sh) {
     if (category !== lastCat) {
       h2(sh, r, 1, category);
       for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
+      mergeRow(sh, r, 1, 7);
       r++;
       lastCat = category;
     }
@@ -1823,11 +2132,13 @@ function buildKrooPICategories(sh) {
   // Score key
   h2(sh, r, 1, 'Score key');
   for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
+  mergeRow(sh, r, 1, 7);
   r++;
   for (let s = 1; s <= 5; s++) {
     sh.getRange(r, 1).setValue(SLB[s])
       .setBackground(SBG[s]).setFontColor(SFG[s]).setFontSize(9).setFontWeight('bold');
     for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SBG[s]);
+    mergeRow(sh, r, 1, 7);
     r++;
   }
 
@@ -1836,6 +2147,7 @@ function buildKrooPICategories(sh) {
   // Legend
   h2(sh, r, 1, 'Column legend');
   for (let c = 2; c <= 7; c++) sh.getRange(r, c).setBackground(SEL);
+  mergeRow(sh, r, 1, 7);
   r++;
   var legend = [
     [PNK,  BG,  'Special Cat? = ⚠️ Yes', 'GDPR Art 9 special category data — requires explicit legal basis and extra protections.'],
@@ -1846,6 +2158,7 @@ function buildKrooPICategories(sh) {
     sh.getRange(r, 1).setValue(lg[2]).setBackground(lg[0]).setFontColor(lg[1]).setFontSize(9).setFontWeight('bold').setWrap(true);
     sh.getRange(r, 2).setValue(lg[3]).setBackground(BG).setFontColor(FG).setFontSize(8).setWrap(true);
     for (let c = 3; c <= 7; c++) sh.getRange(r, c).setBackground(BG);
+    mergeRow(sh, r, 2, 7);
     sh.setRowHeight(r++, 40);
   });
 }
