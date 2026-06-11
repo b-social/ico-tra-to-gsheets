@@ -154,7 +154,9 @@ function mergeRow(sh, r, c1, c2) {
   sh.getRange(r, c1, 1, c2 - c1 + 1).merge();
 }
 
-
+function cw(sh, arr) {
+  arr.forEach(function(pair) { sh.setColumnWidth(pair[0], pair[1]); });
+}
 
 function baseStyle(sh, rows, cols) {
   sh.getRange(1, 1, rows, cols)
