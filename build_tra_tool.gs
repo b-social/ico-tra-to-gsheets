@@ -78,13 +78,6 @@ function buildTRATool() {
     sheets[name] = sh;
   });
 
-  // Remove sheets not in our list
-  ss.getSheets().forEach(function(sh) {
-    if (TABS.map(function(t) { return t[0]; }).indexOf(sh.getName()) === -1) {
-      try { ss.deleteSheet(sh); } catch(_e) {} // eslint-disable-line no-unused-vars
-    }
-  });
-
   // Lookups tab first — all other sheets reference it
   buildLookups(sheets['Lookups'], ss);
   appendKrooToLookups(sheets['Lookups'], ss);   // extends PI_NAMES / PI_SCORES
