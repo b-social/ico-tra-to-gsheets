@@ -812,7 +812,7 @@ function buildQ2(sh, ss) {
     // Special cat conditional format
     var rules4 = sh.getConditionalFormatRules();
     rules4.push(SpreadsheetApp.newConditionalFormatRule()
-      .whenTextEqualTo('⚠️ Yes').setBackground(PNK).setFontColor(BG).setFontWeight('bold')
+      .whenTextEqualTo('⚠️ Yes').setBackground(PNK).setFontColor(BG).setBold(true)
       .setRanges([sh.getRange(r, 4)]).build());
     sh.setConditionalFormatRules(rules4);
 
