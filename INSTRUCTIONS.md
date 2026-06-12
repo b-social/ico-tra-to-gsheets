@@ -1,6 +1,6 @@
 # Using the ICO TRA Tool
 
-Work through tabs in order: **Overview → Q0 → Q1 → Q2 → Q3 → Q4 → Q5 → Q6**.
+Work through tabs in order: **Overview → Q0 → 📋 Instructions → Q1 → Q2 → Q3 → Q4 → Q5 → Q6**.
 The ✅ Summary tab auto-calculates throughout.
 
 ---
