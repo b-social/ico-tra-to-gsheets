@@ -80,6 +80,29 @@ The `inferenceRisk` boolean (7th element) controls orange highlighting in the Kr
 
 ICO basis: *"Special category data also includes types of information that can be used to infer any of the information on that list."*
 
+## GitHub repository
+
+Repo: `github.com/b-social/ico-tra-to-gsheets`
+
+Use **`gh` CLI** for all GitHub operations (PRs, issues, etc.):
+
+```bash
+gh pr create                    # open a PR from current branch
+gh pr list                      # list open PRs
+gh pr merge <number>            # merge a PR
+gh issue list                   # list issues
+gh issue create                 # open an issue
+```
+
+Workflow: **GitHub Flow** — all changes on a branch, never commit directly to `main`.
+Always commit with `--no-gpg-sign` (1Password SSH agent hangs non-interactively).
+
+```bash
+git checkout -b your-branch
+git commit --no-gpg-sign -m "feat: description"
+gh pr create
+```
+
 ## Re-running the script
 
 Running `buildTRATool()` clears and rebuilds all tabs. All entered data is lost. Warn user before re-running.
@@ -91,9 +114,14 @@ ico-tra/
 ├── .github/
 │   └── copilot-instructions.md   ← this file (auto-loaded by Copilot)
 ├── build_tra_tool.gs             ← Google Apps Script, paste into Apps Script editor
+├── maintenance.gs                ← spacer removal and audit helpers
+├── remove_spacers.gs             ← standalone spacer removal script
+├── compare_sheets.py             ← XLSX diff tool (live vs reference sheet)
+├── diff_sheet.py                 ← Sheets API structural diff
 ├── transfer-risk-assessments-tool-20221117.doc  ← source ICO document
-├── COPILOT.md                    ← human-readable session record
-└── README.md                     ← setup and usage instructions
+├── INSTRUCTIONS.md               ← end-user guide for completing a TRA
+├── LICENSE                       ← MIT, © Kroo Bank Ltd.
+└── README.md                     ← dev setup and architecture
 ```
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
