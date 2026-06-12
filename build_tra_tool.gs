@@ -849,7 +849,10 @@ function buildInstructions(sh) {
   });
 
   spacer(sh, r++);
-  h2(sh, r++, 1, 'Decision Point thresholds (auto-calculated in Q2–Q6)');
+  h2(sh, r, 1, 'Decision Point thresholds (auto-calculated in Q2–Q6)');
+  for (let c = 2; c <= 4; c++) sh.getRange(r, c).setBackground(SEL);
+  mergeRow(sh, r, 1, 2);
+  r++;
   var thresholds = [
     ['Max score ≤ 2', 'Low harm risk → MAY PROCEED (Decision Point A1)'],
     ['Max score = 3', 'Moderate harm risk → go to Q3 (Decision Point A2)'],
@@ -2165,7 +2168,7 @@ function buildKrooPICategories(sh) {
     sh.getRange(r, 1).setValue(lg[2]).setBackground(lg[0]).setFontColor(lg[1]).setFontSize(9).setFontWeight('bold').setWrap(true);
     sh.getRange(r, 2).setValue(lg[3]).setBackground(BG).setFontColor(FG).setFontSize(8).setWrap(true);
     for (let c = 3; c <= 7; c++) sh.getRange(r, c).setBackground(BG);
-    mergeRow(sh, r, 2, 7);
+    mergeRow(sh, r, 2, 6);
     sh.setRowHeight(r++, 40);
   });
 }
