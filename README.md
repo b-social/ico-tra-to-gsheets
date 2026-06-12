@@ -127,6 +127,7 @@ ico-tra/
 ├── compare_sheets.py               # XLSX diff tool (live vs reference sheet)
 ├── diff_sheet.py                   # Sheets API structural diff
 ├── transfer-risk-assessments-tool-20221117.doc  # Source ICO document
+├── COPILOT.md                      # Session record and design decisions
 ├── INSTRUCTIONS.md                 # End-user guide for completing a TRA
 ├── COPILOT.md                      # Session record / Copilot context notes
 ├── LICENSE                         # MIT

@@ -35,4 +35,4 @@ Parallel scout: spawn 2-3 `cavecrew-investigator` calls in one message with diff
 ## See also
 
 - [`SKILL.md`](./SKILL.md) — full decision matrix and output contracts
-- [Caveman README](https://github.com/JuliusBrussee/caveman) — repo overview
+- [Caveman README](https://github.com/JuliusBrussee/caveman) — upstream repo overview

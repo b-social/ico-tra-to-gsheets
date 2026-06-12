@@ -119,6 +119,7 @@ ico-tra/
 ├── compare_sheets.py             ← XLSX diff tool (live vs reference sheet)
 ├── diff_sheet.py                 ← Sheets API structural diff
 ├── transfer-risk-assessments-tool-20221117.doc  ← source ICO document
+├── COPILOT.md                    ← session record and design decisions
 ├── INSTRUCTIONS.md               ← end-user guide for completing a TRA
 ├── LICENSE                       ← MIT, © Kroo Bank Ltd.
 └── README.md                     ← dev setup and architecture
