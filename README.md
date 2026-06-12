@@ -129,7 +129,6 @@ ico-tra/
 ├── transfer-risk-assessments-tool-20221117.doc  # Source ICO document
 ├── COPILOT.md                      # Session record and design decisions
 ├── INSTRUCTIONS.md                 # End-user guide for completing a TRA
-├── COPILOT.md                      # Session record / Copilot context notes
 ├── LICENSE                         # MIT
 └── README.md                       # This file
 ```
