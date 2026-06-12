@@ -11,3 +11,4 @@ comparison_report.json
 live.xlsx
 reference.xlsx
 .venv/
+__pycache__/
