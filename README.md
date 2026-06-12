@@ -106,7 +106,7 @@ Requires `gcloud auth login --enable-gdrive-access`.
 
 ## Design decisions
 
-- **No merged cells** — every value is in a single cell; easier to reference and less fragile
+- **Avoid merged cells in data-entry areas** — keeps formulas stable and reduces sheet fragility
 - **Dracula colour theme** — high-contrast dark theme throughout
 - **All dropdowns reference named ranges on the Lookups tab** — change options in one place
 - **Decision Points auto-calculate** — formulas reference named ranges cross-sheet
