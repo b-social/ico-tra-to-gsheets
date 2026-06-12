@@ -3,6 +3,8 @@
 Work through tabs in order: **Overview → Q0 → 📋 Instructions → Q1 → Q2 → Q3 → Q4 → Q5 → Q6**.
 The ✅ Summary tab auto-calculates throughout.
 
+> Read the **📋 Instructions** tab first — it contains the score key, colour guide and decision point reference.
+
 ---
 
 ## Q0 — About this Assessment

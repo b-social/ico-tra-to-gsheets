@@ -106,7 +106,7 @@ Requires `gcloud auth login --enable-gdrive-access`.
 
 ## Design decisions
 
-- **Avoid merged cells in data-entry areas** — keeps formulas stable and reduces sheet fragility
+- **No merged cells in data areas** — working sheet data cells are single cells; header/label rows may merge for visual layout, but all formula-referenced cells are unmerged
 - **Dracula colour theme** — high-contrast dark theme throughout
 - **All dropdowns reference named ranges on the Lookups tab** — change options in one place
 - **Decision Points auto-calculate** — formulas reference named ranges cross-sheet
@@ -127,8 +127,8 @@ ico-tra/
 ├── compare_sheets.py               # XLSX diff tool (live vs reference sheet)
 ├── diff_sheet.py                   # Sheets API structural diff
 ├── transfer-risk-assessments-tool-20221117.doc  # Source ICO document
-├── COPILOT.md                      # Session record and design decisions
 ├── INSTRUCTIONS.md                 # End-user guide for completing a TRA
+├── COPILOT.md                      # Session record and decision log
 ├── LICENSE                         # MIT
 └── README.md                       # This file
 ```

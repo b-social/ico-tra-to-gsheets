@@ -121,6 +121,7 @@ ico-tra/
 ├── transfer-risk-assessments-tool-20221117.doc  ← source ICO document
 ├── COPILOT.md                    ← session record and design decisions
 ├── INSTRUCTIONS.md               ← end-user guide for completing a TRA
+├── COPILOT.md                    ← session record and decision log
 ├── LICENSE                       ← MIT, © Kroo Bank Ltd.
 └── README.md                     ← dev setup and architecture
 ```
