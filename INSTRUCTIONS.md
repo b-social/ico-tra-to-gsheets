@@ -13,7 +13,7 @@ Fill in project details before starting:
 - Department / Team
 - Project Name / Proposed outsourcer
 - Country of outsourcer
-- Link to onboarding request (Onetrust / Jira)
+- Link to onboarding request (OneTrust / Jira)
 - Criticality of proposed supplier
 
 ---
