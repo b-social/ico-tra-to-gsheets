@@ -42,6 +42,8 @@ function buildTRATool() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
   var TABS = [
+    ['Overview',                 null],
+    ['Q0 · About',               CYN],
     ['📋 Instructions',          PRP],
     ['Q1 · Transfer Details',    CYN],
     ['Q2 · PI Risk Scores',      ORG],
@@ -70,7 +72,7 @@ function buildTRATool() {
         sh = ss.insertSheet(name);
       }
     }
-    sh.setTabColor(color);
+    if (color) sh.setTabColor(color);
     sh.clearContents();
     sh.clearFormats();
     sh.clearConditionalFormatRules();
@@ -83,6 +85,8 @@ function buildTRATool() {
   appendKrooToLookups(sheets['Lookups'], ss);   // extends PI_NAMES / PI_SCORES
 
   // Working sheets
+  buildOverview(sheets['Overview']);
+  buildQ0(sheets['Q0 · About']);
   buildInstructions(sheets['📋 Instructions']);
   buildQ1(sheets['Q1 · Transfer Details']);
   buildQ2(sheets['Q2 · PI Risk Scores'], ss);
@@ -93,11 +97,11 @@ function buildTRATool() {
   buildSummary(sheets['✅ Summary']);
   buildKrooPICategories(sheets['🏦 Kroo PI Categories']);
 
-  ss.setActiveSheet(sheets['📋 Instructions']);
+  ss.setActiveSheet(sheets['Overview']);
 
   SpreadsheetApp.getUi().alert(
     '✅ ICO TRA Tool built!\n\n' +
-    'Start at 📋 Instructions, work through Q1–Q6.\n' +
+    'Start at Overview → Q0 (project details) → 📋 Instructions → Q1–Q6.\n' +
     '✅ Summary tracks your outcome automatically.\n\n' +
     'All dropdown option lists live on the Lookups tab.'
   );
@@ -760,6 +764,69 @@ function buildLookups(sh, ss) {
       .setBackground(SBG[s]).setFontColor(SFG[s])
       .setFontSize(9).setFontWeight('bold');
   }
+}
+
+// ─── OVERVIEW ─────────────────────────────────────────────────────────────────
+
+function buildOverview(sh) {
+  sh.setColumnWidth(1, 61);
+  sh.setColumnWidth(2, 607);
+
+  var content = [
+    [2, 14, 'This template should be used if you wish to transfer personal data to countries without GB adequacy.'],
+    [5, 14, 'A legalistic view is What is an international transfer of personal information? | ICO'],
+    [7, 14, "More simply: if the country's not on the list you need to complete this risk assessment to understand more about the country's data and other culture is like."],
+    [9, 10, 'Maintainer: Adam McGreggor, DPO <dpo@kroo.com>'],
+    [10, 10, "V1.0. Adapted from the ICO's template, with additional information added for banking types of data"],
+  ];
+  content.forEach(function(c) {
+    sh.getRange(c[0], 2).setValue(c[2]).setFontSize(c[1]).setWrap(true);
+  });
+}
+
+// ─── Q0 · ABOUT ───────────────────────────────────────────────────────────────
+
+function buildQ0(sh) {
+  cw(sh, [[1,422],[2,269],[3,365]]);
+  baseStyle(sh, 80, 3);
+  sh.setFrozenRows(2);
+
+  h1(sh, 1, 1, 'Q0 · Information about this project');
+  sh.getRange(1, 2).setBackground(PRP);
+  mergeRow(sh, 1, 1, 2);
+  sh.getRange(1, 3).setBackground(PRP);
+  navLink(sh, 1, 3, [['→ Q1', 'Q1 · Transfer Details']]);
+
+  sh.getRange(2, 1).setBackground(SEL);
+  sh.getRange(2, 2).setBackground(SEL);
+  sh.getRange(2, 3).setBackground(SEL);
+  mergeRow(sh, 2, 1, 3);
+
+  var r = 3;
+
+  h2(sh, r, 1, 'PROJECT DETAILS');
+  sh.getRange(r, 2).setBackground(SEL);
+  sh.getRange(r, 3).setBackground(SEL);
+  r++;
+
+  var fields = [
+    ['Name(s) of person/people completing this risk assessment', 'Your name ;)'],
+    ['Department / Team',                                        ''],
+    ['Project Name / Proposed outsourcer',                       ''],
+    ['Country of outsourcer',                                    ''],
+    ['Link to onboarding request',                               'Onetrust / Jira'],
+    ['Criticality of proposed supplier (not an alternative)',    ''],
+  ];
+  fields.forEach(function(f) {
+    lbl(sh, r, 1, f[0]);
+    inp(sh, r, 2);
+    if (f[1]) {
+      sh.getRange(r, 3).setValue(f[1]).setBackground(BG).setFontColor(FG).setFontSize(8).setFontStyle('italic');
+    } else {
+      sh.getRange(r, 3).setBackground(BG);
+    }
+    sh.setRowHeight(r++, 30);
+  });
 }
 
 // ─── INSTRUCTIONS ─────────────────────────────────────────────────────────────
